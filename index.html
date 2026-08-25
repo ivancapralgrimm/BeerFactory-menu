@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BeerFactory — меню</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700&display=swap');
+
+  :root{
+    --bg: #17110c;
+    --bg-2: #1f1710;
+    --paper: #f1e6d2;
+    --paper-dim: #e3d3b6;
+    --amber: #e8a33d;
+    --copper: #c1652f;
+    --olive: #6f7a55;
+    --ink: #241a10;
+    --ink-soft: #4a3b28;
+    --line: rgba(241,230,210,0.14);
+  }
+
+  * { box-sizing: border-box; }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% -10%, rgba(232,163,61,0.14), transparent 45%),
+      radial-gradient(circle at 100% 0%, rgba(193,101,47,0.10), transparent 40%),
+      var(--bg);
+    color: var(--paper);
+    font-family: 'Oswald', sans-serif;
+    padding: 0 0 60px;
+    min-height:100vh;
+  }
+
+  header{
+    padding: 34px 20px 20px;
+    text-align:center;
+    border-bottom: 1px solid var(--line);
+  }
+  .kicker{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.25em;
+    text-transform:uppercase;
+    color: var(--amber);
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Bebas Neue', sans-serif;
+    font-size: 52px;
+    letter-spacing: 0.04em;
+    margin: 0;
+    line-height:0.9;
+    background: linear-gradient(180deg, #f6e6c6, var(--amber));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color: var(--paper-dim);
+    opacity:0.7;
+    margin-top:10px;
+  }
+
+  .controls{
+    max-width: 640px;
+    margin: 22px auto 0;
+    padding: 0 16px;
+  }
+  .search-wrap{
+    position:relative;
+    margin-bottom:14px;
+  }
+  input[type="text"]{
+    width:100%;
+    background: var(--bg-2);
+    border: 1px dashed var(--line);
+    border-radius: 3px;
+    padding: 13px 16px;
+    color: var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 14px;
+    outline:none;
+  }
+  input[type="text"]::placeholder{ color: rgba(241,230,210,0.35); }
+  input[type="text"]:focus{ border-color: var(--amber); }
+
+  .tabs{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .tab{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    padding:9px 14px;
+    border-radius:999px;
+    border:1px solid var(--line);
+    background:transparent;
+    color: var(--paper-dim);
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .tab.active{
+    background: var(--amber);
+    border-color: var(--amber);
+    color: var(--ink);
+    font-weight:600;
+  }
+  .tab:not(.active):hover{ border-color: var(--amber); color: var(--amber); }
+
+  .toolbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:14px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color: rgba(241,230,210,0.5);
+  }
+  .surprise-btn{
+    background:transparent;
+    border:1px solid var(--copper);
+    color: var(--copper);
+    padding:7px 12px;
+    border-radius:3px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    cursor:pointer;
+    letter-spacing:0.04em;
+  }
+  .surprise-btn:hover{ background: var(--copper); color: var(--bg); }
+
+  .grid{
+    max-width: 640px;
+    margin: 26px auto 0;
+    padding: 0 16px;
+    display:grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  @media (min-width: 560px){
+    .grid{ grid-template-columns: 1fr 1fr; }
+  }
+
+  .card{
+    perspective: 1200px;
+    height: 190px;
+  }
+  .card-inner{
+    position:relative;
+    width:100%; height:100%;
+    transition: transform .5s cubic-bezier(.4,.2,.2,1);
+    transform-style: preserve-3d;
+  }
+  .card.flipped .card-inner{ transform: rotateY(180deg); }
+
+  .face{
+    position:absolute; inset:0;
+    backface-visibility:hidden;
+    border-radius:6px;
+    padding:16px;
+    overflow:hidden;
+  }
+  .front{
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    display:flex;
+    flex-direction:column;
+    justify-content:space-between;
+    cursor:pointer;
+  }
+  .front:hover{ border-color: var(--amber); }
+  .front::after{
+    content:"";
+    position:absolute;
+    left:0; right:0; bottom:0;
+    height:8px;
+    background-image: radial-gradient(circle, var(--bg) 3px, transparent 3.5px);
+    background-size: 14px 14px;
+    background-position: 4px 3px;
+  }
+  .cat-icon{ font-size:22px; opacity:0.85; }
+  .card-name{
+    font-family:'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing:0.02em;
+    line-height:1;
+    margin: 10px 0 6px;
+    color: var(--paper);
+  }
+  .tags{
+    display:flex; flex-wrap:wrap; gap:5px;
+  }
+  .tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    padding:3px 7px;
+    border-radius:2px;
+    background: rgba(232,163,61,0.12);
+    color: var(--amber);
+    border: 1px solid rgba(232,163,61,0.25);
+  }
+  .front.has-photo{
+    background-size: cover;
+    background-position: center;
+  }
+  .front.has-photo::before{
+    content:"";
+    position:absolute; inset:0;
+    background: linear-gradient(0deg, rgba(23,17,12,0.92) 0%, rgba(23,17,12,0.35) 55%, rgba(23,17,12,0.1) 100%);
+  }
+  .front.has-photo > div, .front.has-photo .fav-btn, .front.has-photo .tap-hint{
+    position:relative; z-index:1;
+  }
+  .back-photo{
+    width:100%;
+    max-height:80px;
+    object-fit:cover;
+    border-radius:3px;
+    margin-bottom:8px;
+    display:block;
+  }
+  .kitchen .tag{
+    background: rgba(111,122,85,0.16);
+    color: #b7c396;
+    border-color: rgba(111,122,85,0.35);
+  }
+  .fav-btn{
+    position:absolute; top:12px; right:12px;
+    background:none; border:none;
+    font-size:17px;
+    cursor:pointer;
+    color: rgba(241,230,210,0.3);
+    line-height:1;
+    padding:2px;
+  }
+  .fav-btn.active{ color: var(--copper); }
+  .tap-hint{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:9px;
+    color: rgba(241,230,210,0.3);
+    letter-spacing:0.05em;
+  }
+
+  .back{
+    background: var(--paper);
+    color: var(--ink);
+    transform: rotateY(180deg);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11.5px;
+    line-height:1.5;
+    cursor:pointer;
+    overflow-y:auto;
+  }
+  .back b{
+    display:block;
+    color: var(--copper);
+    font-family:'Oswald', sans-serif;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.08em;
+    margin: 8px 0 2px;
+  }
+  .back b:first-child{ margin-top:0; }
+  .back .ticket-name{
+    font-family:'Bebas Neue', sans-serif;
+    font-size:20px;
+    color: var(--ink);
+    letter-spacing:0.02em;
+    border-bottom: 1px dashed var(--ink-soft);
+    padding-bottom:6px;
+    margin-bottom:6px;
+  }
+
+  .empty{
+    text-align:center;
+    padding: 50px 20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color: rgba(241,230,210,0.4);
+  }
+
+  .note{
+    max-width:640px;
+    margin: 34px auto 0;
+    padding: 14px 20px;
+    text-align:center;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10.5px;
+    line-height:1.6;
+    color: rgba(241,230,210,0.35);
+    border-top: 1px solid var(--line);
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .card-inner{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="kicker">@BEERFACTORYbot · справочник</div>
+  <h1>BEERFACTORY</h1>
+  <div class="sub">коктейли &amp; кухня — тапни по карточке</div>
+</header>
+
+<div class="controls">
+  <div class="search-wrap">
+    <input type="text" id="search" placeholder="найти по названию или тегу...">
+  </div>
+  <div class="tabs" id="tabs">
+    <button class="tab active" data-cat="all">Всё меню</button>
+    <button class="tab" data-cat="Коктейли">🍹 Коктейли</button>
+    <button class="tab" data-cat="Кухня">🍽 Кухня</button>
+    <button class="tab" data-cat="fav">⭐ Избранное</button>
+  </div>
+  <div class="toolbar">
+    <span id="count">— позиций</span>
+    <button class="surprise-btn" id="surprise">🎲 Не знаю, что выбрать</button>
+  </div>
+</div>
+
+<div class="grid" id="grid"></div>
+<div class="empty" id="empty" style="display:none">Ничего не нашлось. Попробуй другое слово.</div>
+
+<div class="note">
+  Сейчас показаны демо-примеры. Чтобы подключить твою реальную таблицу NocoDB
+  (61 коктейль + 99 позиций кухни) — впиши токен в CONFIG в начале &lt;script&gt;
+  и поставь useRemote: true. Подробности в инструкции ниже.
+</div>
+
+<script>
+const ITEMS = [
+  {name:"Яблоко-Саган", cat:"Коктейли", tags:["ягодный","освежающий"], compound:"Джин 40мл · яблочный сок 60мл · сироп саган-дайля 15мл · лайм", method:"Шейк со льдом, двойное процеживание", serving:"Коктейльный бокал, долька яблока"},
+  {name:"Дымная Гавана", cat:"Коктейли", tags:["ромовый","крепкий"], compound:"Тёмный ром 45мл · ананасовый сок 40мл · лайм 15мл · биттер", method:"Билд в стакане на льду, лёгкое копчение веточкой розмарина", serving:"Хайбол, лёд-кубик"},
+  {name:"Полынная Горечь", cat:"Коктейли", tags:["горький","аперитив"], compound:"Джин 35мл · Апероль 25мл · тоник · долька грейпфрута", method:"Билд в бокале со льдом, аккуратно долить тоник", serving:"Бокал для вина, лёд"},
+  {name:"Овсяный Штиль", cat:"Коктейли", tags:["сливочный","без алкоголя"], compound:"Овсяное молоко 100мл · эспрессо 30мл · кленовый сироп 10мл", method:"Взбить шейкером без льда, перелить на лёд", serving:"Рокс, корица сверху"},
+  {name:"Мясная тарелка домашних деликатесов", cat:"Кухня", tags:["мясная","на компанию"], compound:"Хамон, брезаола, суджук, домашняя ветчина, оливки, орехи", method:"Нарезка тонкими слайсами, выложить веером по кругу тарелки", serving:"Деревянная доска, 6 персон, горчица отдельно"},
+  {name:"Сырная тарелка", cat:"Кухня", tags:["сырная","на компанию"], compound:"Дор блю, качотта, пармезан, мёд, грецкий орех, виноград", method:"Разложить по фактуре от мягкого к твёрдому", serving:"Каменная доска, мёд в розетке"},
+  {name:"Брускетта с томатами", cat:"Кухня", tags:["лёгкая","вегетарианская"], compound:"Чиабатта, томаты черри, базилик, чеснок, олив. масло, бальзамик", method:"Обжарить хлеб, натереть чесноком, выложить томатную смесь", serving:"Тарелка, 3 шт, микрозелень"},
+  {name:"Крылья BBQ острые", cat:"Кухня", tags:["острая","горячая"], compound:"Куриные крылья, соус барбекю, чили-хлопья, сельдерей", method:"Маринад 2 часа, жарка во фритюре, глазирование соусом", serving:"Тарелка, соус блю-чиз, стебель сельдерея"},
+];
+
+// ====== ПОДКЛЮЧЕНИЕ К СВОЕЙ БАЗЕ NOCODB ======
+// Заполни и поставь useRemote: true, чтобы сайт брал данные из твоей таблицы
+// вместо демо-примеров ниже. Инструкция — в README.
+const CONFIG = {
+  useRemote: false,                              // true — включить реальные данные
+  baseUrl: "https://nocodb.puzzlebot.top",        // адрес твоего NocoDB
+  tableId: "mj1sg7yhmtp6wqq",                     // ID таблицы «Меню»
+  token: "ВСТАВЬ_СЮДА_ТОКЕН",                     // NocoDB → Tokens → Create new token
+  categoryField: "Категория",                     // колонка со значением "Коктейли"/"Кухня"
+};
+
+let DATA = ITEMS; // пока не подключена база — используются демо-примеры выше
+
+async function loadData(){
+  if(!CONFIG.useRemote) return;
+  try{
+    const url = `${CONFIG.baseUrl}/api/v2/tables/${CONFIG.tableId}/records?limit=1000`;
+    const res = await fetch(url, { headers: { "xc-token": CONFIG.token } });
+    if(!res.ok) throw new Error("NocoDB ответил " + res.status);
+    const json = await res.json();
+    const rows = json.list || [];
+    DATA = rows.map(r => {
+      const isKitchen = (r[CONFIG.categoryField] || "").trim() === "Кухня"
+        || Boolean(r["Приготовление"] || r["Вес"]);
+      return {
+        name: r["Название"] || "Без названия",
+        cat: isKitchen ? "Кухня" : "Коктейли",
+        tags: (r["Теги"] || "").split(/\s+/).filter(Boolean),
+        compound: r["Состав"] || "—",
+        method: r["Метод"] || r["Приготовление"] || "—",
+        serving: r["Подача"] || r["Вес"] || "—",
+        photo: r["Фото-ссылка"] || null,
+      };
+    });
+  }catch(e){
+    console.error("Не удалось загрузить NocoDB, показаны демо-данные:", e);
+  }
+}
+
+let state = { cat: "all", query: "", favs: new Set() };
+
+// На реальном хостинге (GitHub Pages и т.п.) используем localStorage браузера —
+// window.storage существует только внутри превью-артефактов Claude.
+const hasClaudeStorage = typeof window.storage !== "undefined";
+
+async function loadFavs(){
+  try{
+    if(hasClaudeStorage){
+      const res = await window.storage.get("beerfactory:favs");
+      if(res && res.value){ state.favs = new Set(JSON.parse(res.value)); }
+    } else {
+      const raw = localStorage.getItem("beerfactory:favs");
+      if(raw){ state.favs = new Set(JSON.parse(raw)); }
+    }
+  }catch(e){ /* нет сохранённых избранных ещё */ }
+  render();
+}
+async function saveFavs(){
+  try{
+    if(hasClaudeStorage){
+      await window.storage.set("beerfactory:favs", JSON.stringify([...state.favs]));
+    } else {
+      localStorage.setItem("beerfactory:favs", JSON.stringify([...state.favs]));
+    }
+  }catch(e){ console.error("storage error", e); }
+}
+
+function matches(item){
+  if(state.cat === "fav" && !state.favs.has(item.name)) return false;
+  if(state.cat !== "all" && state.cat !== "fav" && item.cat !== state.cat) return false;
+  if(state.query){
+    const q = state.query.toLowerCase();
+    const hay = (item.name + " " + item.tags.join(" ")).toLowerCase();
+    if(!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+function render(){
+  const grid = document.getElementById("grid");
+  const empty = document.getElementById("empty");
+  const list = DATA.filter(matches);
+  document.getElementById("count").textContent = list.length + " позиций";
+  grid.innerHTML = "";
+  empty.style.display = list.length ? "none" : "block";
+
+  list.forEach(item => {
+    const isFav = state.favs.has(item.name);
+    const isKitchen = item.cat === "Кухня";
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="face front ${isKitchen ? 'kitchen' : ''} ${item.photo ? 'has-photo' : ''}" ${item.photo ? `style="background-image:url('${item.photo}')"` : ''}>
+          <button class="fav-btn ${isFav ? 'active':''}" title="в избранное">${isFav ? '★' : '☆'}</button>
+          <div>
+            ${item.photo ? '' : `<div class="cat-icon">${isKitchen ? '🍽' : '🍹'}</div>`}
+            <div class="card-name">${item.name}</div>
+            <div class="tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+          </div>
+          <div class="tap-hint">тапни для рецепта →</div>
+        </div>
+        <div class="face back">
+          ${item.photo ? `<img class="back-photo" src="${item.photo}" alt="${item.name}">` : ''}
+          <div class="ticket-name">${item.name}</div>
+          <b>Состав</b>${item.compound}
+          <b>${isKitchen ? 'Приготовление' : 'Метод'}</b>${item.method}
+          <b>${isKitchen ? 'Вес' : 'Подача'}</b>${item.serving}
+        </div>
+      </div>`;
+    const front = card.querySelector(".front");
+    const back = card.querySelector(".back");
+    const favBtn = card.querySelector(".fav-btn");
+    front.addEventListener("click", (e) => { if(e.target !== favBtn) card.classList.add("flipped"); });
+    back.addEventListener("click", () => card.classList.remove("flipped"));
+    favBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if(state.favs.has(item.name)) state.favs.delete(item.name);
+      else state.favs.add(item.name);
+      saveFavs();
+      render();
+    });
+    grid.appendChild(card);
+  });
+}
+
+document.getElementById("tabs").addEventListener("click", (e) => {
+  const btn = e.target.closest(".tab");
+  if(!btn) return;
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  btn.classList.add("active");
+  state.cat = btn.dataset.cat;
+  render();
+});
+
+document.getElementById("search").addEventListener("input", (e) => {
+  state.query = e.target.value.trim();
+  render();
+});
+
+document.getElementById("surprise").addEventListener("click", () => {
+  const pool = DATA.filter(i => state.cat === "all" || state.cat === "fav" ? true : i.cat === state.cat);
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  document.getElementById("search").value = "";
+  state.query = "";
+  render();
+  const cards = [...document.querySelectorAll(".card-name")];
+  const target = cards.find(c => c.textContent === pick.name);
+  if(target){
+    const card = target.closest(".card");
+    card.scrollIntoView({behavior:"smooth", block:"center"});
+    setTimeout(() => card.classList.add("flipped"), 350);
+  }
+});
+
+loadData().then(loadFavs);
+</script>
+
+</body>
+</html>
