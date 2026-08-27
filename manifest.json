@@ -1,6 +1,6 @@
 {
   "name": "BeerFactory — меню",
-  "short_name": "BeerFactory",
+  "short_name": "BeerFactoryBot",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#0f0f11",
