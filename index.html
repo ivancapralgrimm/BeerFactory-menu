@@ -402,10 +402,12 @@ const ITEMS = [
 const CONFIG = {
   useRemote: true,                                // true — включить реальные данные, false — демо
   baseUrl: "https://nocodb.puzzlebot.top",         // адрес твоего NocoDB
-  tableId: "mqo5ga1nk6h8lv8",                      // ID таблицы «Меню»
-  token: "FO6A3bSrEwpApDVOsufZcYS5Si0G9gREHJR2yUF-", // NocoDB → Tokens → Create new token
+  tableId: "mqo5ga1nk6h8lv8",                      // ID таблицы «Меню» (коктейли)
+  kitchenTableId: "ВСТАВЬ_ID_ТАБЛИЦЫ_КУХНИ",       // ID отдельной таблицы с кухней
+  token: "FO6A3bSrEwpApDVOsufZcYS5Si0G9gREHJR2yUF-", // NocoDB → Tokens → Create new token (общий для обеих таблиц, если это один аккаунт)
   categoryField: "Категория",                      // колонка со значением "Коктейли"/"Кухня"/...
 };
+
 
 // НОВОЕ: иконка для каждой категории на лицевой стороне карточки.
 // Если добавишь ещё одну категорию — впиши сюда её иконку по такому же образцу.
@@ -418,42 +420,46 @@ let DATA = ITEMS;
 // Загружает строки из таблицы NocoDB через её REST API и превращает их
 // в тот же формат объектов, что и в ITEMS выше, чтобы остальной код
 // не знал разницы между демо-данными и реальными.
+// Достаёт все строки из ОДНОЙ таблицы NocoDB и приводит их к единому формату карточки.
+// forcedCategory — если передан, у всех строк этой таблицы категория ставится
+// принудительно (нужно для отдельной таблицы "Кухня" — там своей колонки
+// "Категория" может и не быть, мы и так знаем, что там всё "Кухня").
+async function fetchTable(tableId, forcedCategory){
+  const url = `${CONFIG.baseUrl}/api/v2/tables/${tableId}/records?limit=1000`;
+  const res = await fetch(url, { headers: { "xc-token": CONFIG.token } });
+  if(!res.ok) throw new Error("NocoDB ответил " + res.status + " для таблицы " + tableId);
+  const json = await res.json();
+  const rows = json.list || [];
+  return rows.map(r => {
+    const cat = forcedCategory || (r[CONFIG.categoryField] || "").trim() || "Коктейли";
+    return {
+      name: r["Название"] || "Без названия",
+      cat: cat,
+      tags: (r["Теги"] || "").split(/\s+/).filter(Boolean),
+      compound: r["Состав"] || "—",
+      method: r["Метод"] || r["Приготовление"] || "—",
+      serving: r["Подача"] || r["Вес"] || "—",
+      photo: r["Фото-ссылка"] || null,
+    };
+  });
+}
+
+// Загружает обе таблицы (коктейли + кухня) и склеивает их в один массив DATA.
+// Именно поэтому во вкладке "Всё меню" видны позиции из обеих таблиц сразу —
+// а вкладки "Коктейли"/"Кухня" по-прежнему фильтруют по полю cat, как раньше.
 async function loadData(){
   if(!CONFIG.useRemote) return; // если выключено — просто оставляем демо-данные
 
   try{
-    // limit=1000 — с запасом, чтобы забрать все строки таблицы разом
-    const url = `${CONFIG.baseUrl}/api/v2/tables/${CONFIG.tableId}/records?limit=1000`;
-    // заголовок xc-token — это и есть авторизация в NocoDB (см. CONFIG.token)
-    const res = await fetch(url, { headers: { "xc-token": CONFIG.token } });
-    if(!res.ok) throw new Error("NocoDB ответил " + res.status);
-
-    const json = await res.json();
-    const rows = json.list || []; // NocoDB возвращает { list: [...], pageInfo: {...} }
-
-    // Превращаем "сырые" строки NocoDB (с русскими именами колонок)
-    // в единый внутренний формат карточки
-    DATA = rows.map(r => {
-      // Берём категорию прямо из колонки NocoDB. Если колонка пустая — считаем,
-      // что это Коктейли (историческая совместимость со старой таблицей).
-      const cat = (r[CONFIG.categoryField] || "").trim() || "Коктейли";
-      return {
-        name: r["Название"] || "Без названия",
-        cat: cat,
-        // Теги хранятся одной строкой через пробел — разбиваем в массив
-        tags: (r["Теги"] || "").split(/\s+/).filter(Boolean),
-        compound: r["Состав"] || "—",
-        // У кухни поле называется "Приготовление", у коктейлей — "Метод";
-        // берём то, что заполнено
-        method: r["Метод"] || r["Приготовление"] || "—",
-        // Аналогично: "Подача" у коктейлей, "Вес" у кухни
-        serving: r["Подача"] || r["Вес"] || "—",
-        photo: r["Фото-ссылка"] || null,
-      };
-    });
+    // Promise.all — оба запроса летят параллельно, а не один за другим
+    const [mainItems, kitchenItems] = await Promise.all([
+      fetchTable(CONFIG.tableId, null),               // основная таблица — категория берётся из колонки
+      CONFIG.kitchenTableId
+        ? fetchTable(CONFIG.kitchenTableId, "Кухня")   // вторая таблица — категория всегда "Кухня"
+        : Promise.resolve([]),
+    ]);
+    DATA = [...mainItems, ...kitchenItems]; // склеиваем оба списка в один
   }catch(e){
-    // Если что-то пошло не так (нет интернета, неверный токен, CORS и т.п.) —
-    // не ломаем страницу, а просто оставляем демо-данные и пишем ошибку в консоль
     console.error("Не удалось загрузить NocoDB, показаны демо-данные:", e);
   }
 }
