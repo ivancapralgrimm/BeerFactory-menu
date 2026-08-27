@@ -3,14 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Указываем иконку для экрана «Домой» на iOS -->
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-
-<!-- Задаем красивое короткое имя приложения при установке -->
-<meta name="apple-mobile-web-app-title" content="BeerFactoryBot">
-
-<!-- Разрешаем открывать сайт как полноценное приложение (без адресной строки Safari) -->
-<meta name="apple-mobile-web-app-capable" content="yes">
 <title>BeerFactory — меню</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700&display=swap');
@@ -160,6 +152,10 @@
   .card{
     perspective: 1200px;
     height: 190px;
+    transition: height .4s ease;
+  }
+  .card.flipped{
+    height: var(--flip-h, 340px);
   }
   .card-inner{
     position:relative;
@@ -217,23 +213,11 @@
     color: var(--amber);
     border: 1px solid rgba(232,163,61,0.25);
   }
-  .front.has-photo{
-    background-size: cover;
-    background-position: center;
-  }
-  .front.has-photo::before{
-    content:"";
-    position:absolute; inset:0;
-    background: linear-gradient(0deg, rgba(23,17,12,0.92) 0%, rgba(23,17,12,0.35) 55%, rgba(23,17,12,0.1) 100%);
-  }
-  .front.has-photo > div, .front.has-photo .fav-btn, .front.has-photo .tap-hint{
-    position:relative; z-index:1;
-  }
   .back-photo{
     width:100%;
-    max-height:80px;
+    aspect-ratio: 16 / 9;
     object-fit:cover;
-    border-radius:3px;
+    border-radius:4px;
     margin-bottom:8px;
     display:block;
   }
@@ -242,16 +226,6 @@
     color: #b7c396;
     border-color: rgba(111,122,85,0.35);
   }
-  .fav-btn{
-    position:absolute; top:12px; right:12px;
-    background:none; border:none;
-    font-size:17px;
-    cursor:pointer;
-    color: rgba(241,230,210,0.3);
-    line-height:1;
-    padding:2px;
-  }
-  .fav-btn.active{ color: var(--copper); }
   .tap-hint{
     font-family:'IBM Plex Mono', monospace;
     font-size:9px;
@@ -288,6 +262,12 @@
     padding-bottom:6px;
     margin-bottom:6px;
   }
+  .ingredient-table{ margin-bottom:2px; }
+  .ingredient-row{
+    padding: 3px 0;
+    border-bottom: 1px dashed rgba(74,59,40,0.22);
+  }
+  .ingredient-row:last-child{ border-bottom:none; }
 
   .empty{
     text-align:center;
@@ -330,7 +310,6 @@
     <button class="tab active" data-cat="all">Всё меню</button>
     <button class="tab" data-cat="Коктейли">🍹 Коктейли</button>
     <button class="tab" data-cat="Кухня">🍽 Кухня</button>
-    <button class="tab" data-cat="fav">⭐ Избранное</button>
   </div>
   <div class="toolbar">
     <span id="count">— позиций</span>
@@ -342,7 +321,9 @@
 <div class="empty" id="empty" style="display:none">Ничего не нашлось. Попробуй другое слово.</div>
 
 <div class="note">
-  Сейчас показаны демо-примеры. В разработке!
+  Сейчас показаны демо-примеры. Чтобы подключить твою реальную таблицу NocoDB
+  (61 коктейль + 99 позиций кухни) — впиши токен в CONFIG в начале &lt;script&gt;
+  и поставь useRemote: true. Подробности в инструкции ниже.
 </div>
 
 <script>
@@ -361,10 +342,10 @@ const ITEMS = [
 // Заполни и поставь useRemote: true, чтобы сайт брал данные из твоей таблицы
 // вместо демо-примеров ниже. Инструкция — в README.
 const CONFIG = {
-  useRemote: true,                              // true — включить реальные данные
+  useRemote: true,                                // true — включить реальные данные
   baseUrl: "https://nocodb.puzzlebot.top",        // адрес твоего NocoDB
   tableId: "mqo5ga1nk6h8lv8",                     // ID таблицы «Меню»
-  token: "FO6A3bSrEwpApDVOsufZcYS5Si0G9gREHJR2yUF-",                     // NocoDB → Tokens → Create new token
+  token: "FO6A3bSrEwpApDVOsufZcYS5Si0G9gREHJR2yUF-", // NocoDB → Tokens → Create new token
   categoryField: "Категория",                     // колонка со значением "Коктейли"/"Кухня"
 };
 
@@ -396,43 +377,38 @@ async function loadData(){
   }
 }
 
-let state = { cat: "all", query: "", favs: new Set() };
-
-// На реальном хостинге (GitHub Pages и т.п.) используем localStorage браузера —
-// window.storage существует только внутри превью-артефактов Claude.
-const hasClaudeStorage = typeof window.storage !== "undefined";
-
-async function loadFavs(){
-  try{
-    if(hasClaudeStorage){
-      const res = await window.storage.get("beerfactory:favs");
-      if(res && res.value){ state.favs = new Set(JSON.parse(res.value)); }
-    } else {
-      const raw = localStorage.getItem("beerfactory:favs");
-      if(raw){ state.favs = new Set(JSON.parse(raw)); }
-    }
-  }catch(e){ /* нет сохранённых избранных ещё */ }
-  render();
-}
-async function saveFavs(){
-  try{
-    if(hasClaudeStorage){
-      await window.storage.set("beerfactory:favs", JSON.stringify([...state.favs]));
-    } else {
-      localStorage.setItem("beerfactory:favs", JSON.stringify([...state.favs]));
-    }
-  }catch(e){ console.error("storage error", e); }
-}
+let state = { cat: "all", query: "" };
 
 function matches(item){
-  if(state.cat === "fav" && !state.favs.has(item.name)) return false;
-  if(state.cat !== "all" && state.cat !== "fav" && item.cat !== state.cat) return false;
+  if(state.cat !== "all" && item.cat !== state.cat) return false;
   if(state.query){
     const q = state.query.toLowerCase();
     const hay = (item.name + " " + item.tags.join(" ")).toLowerCase();
     if(!hay.includes(q)) return false;
   }
   return true;
+}
+
+// Единицы измерения, после которых обычно начинается новый ингредиент
+const UNIT_PATTERN = /(\d+(?:[.,]\d+)?\s*(?:мл|гр|г|кг|л|шт|долька|дольки|долек|слайс|слайса|слайсов|лист|листик|листика|листа|стебель|стебля|палочка|палочки|щепотка|щепотки|капля|капли|капель|зубчик|зубчика|зубчиков|пучок|пучка|ч\.л\.|ст\.л\.)\.?)\s+(?=[А-ЯЁ])/g;
+
+function ingredientRows(text){
+  let raw = String(text || "—").trim();
+  let lines;
+  if(/\\n/.test(raw)){
+    // в ячейке вручную набран текст "\n" — используем его как разделитель
+    lines = raw.split(/\\n+/);
+  } else if(/\n/.test(raw)){
+    // в ячейке настоящий перенос строки — используем его
+    lines = raw.split(/\n+/);
+  } else {
+    // иначе пытаемся сами расставить переносы по единицам измерения
+    const withBreaks = raw.replace(UNIT_PATTERN, "$1\n");
+    lines = withBreaks.split(/\n+/);
+  }
+  lines = lines.map(s => s.trim()).filter(Boolean);
+  if(lines.length === 0) lines = ["—"];
+  return lines.map(line => `<div class="ingredient-row">${line}</div>`).join("");
 }
 
 function render(){
@@ -444,16 +420,14 @@ function render(){
   empty.style.display = list.length ? "none" : "block";
 
   list.forEach(item => {
-    const isFav = state.favs.has(item.name);
     const isKitchen = item.cat === "Кухня";
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `
       <div class="card-inner">
-        <div class="face front ${isKitchen ? 'kitchen' : ''} ${item.photo ? 'has-photo' : ''}" ${item.photo ? `style="background-image:url('${item.photo}')"` : ''}>
-          <button class="fav-btn ${isFav ? 'active':''}" title="в избранное">${isFav ? '★' : '☆'}</button>
+        <div class="face front ${isKitchen ? 'kitchen' : ''}">
           <div>
-            ${item.photo ? '' : `<div class="cat-icon">${isKitchen ? '🍽' : '🍹'}</div>`}
+            <div class="cat-icon">${isKitchen ? '🍽' : '🍹'}</div>
             <div class="card-name">${item.name}</div>
             <div class="tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
           </div>
@@ -462,24 +436,20 @@ function render(){
         <div class="face back">
           ${item.photo ? `<img class="back-photo" src="${item.photo}" alt="${item.name}">` : ''}
           <div class="ticket-name">${item.name}</div>
-          <b>Состав</b>${item.compound}
+          <b>Состав</b>
+          <div class="ingredient-table">${ingredientRows(item.compound)}</div>
           <b>${isKitchen ? 'Приготовление' : 'Метод'}</b>${item.method}
           <b>${isKitchen ? 'Вес' : 'Подача'}</b>${item.serving}
         </div>
       </div>`;
     const front = card.querySelector(".front");
     const back = card.querySelector(".back");
-    const favBtn = card.querySelector(".fav-btn");
-    front.addEventListener("click", (e) => { if(e.target !== favBtn) card.classList.add("flipped"); });
+    front.addEventListener("click", () => card.classList.add("flipped"));
     back.addEventListener("click", () => card.classList.remove("flipped"));
-    favBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if(state.favs.has(item.name)) state.favs.delete(item.name);
-      else state.favs.add(item.name);
-      saveFavs();
-      render();
-    });
     grid.appendChild(card);
+    // растягиваем карточку под реальную высоту содержимого оборота (фото + рецепт)
+    const naturalHeight = back.scrollHeight + 8;
+    card.style.setProperty("--flip-h", Math.max(naturalHeight, 220) + "px");
   });
 }
 
@@ -498,7 +468,7 @@ document.getElementById("search").addEventListener("input", (e) => {
 });
 
 document.getElementById("surprise").addEventListener("click", () => {
-  const pool = DATA.filter(i => state.cat === "all" || state.cat === "fav" ? true : i.cat === state.cat);
+  const pool = DATA.filter(i => state.cat === "all" ? true : i.cat === state.cat);
   const pick = pool[Math.floor(Math.random() * pool.length)];
   document.getElementById("search").value = "";
   state.query = "";
@@ -512,7 +482,7 @@ document.getElementById("surprise").addEventListener("click", () => {
   }
 });
 
-loadData().then(loadFavs);
+loadData().then(render);
 </script>
 
 </body>
