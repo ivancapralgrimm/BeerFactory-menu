@@ -446,13 +446,26 @@ async function fetchTable(tableId, forcedCategory){
   const rows = json.list || [];
   return rows.map(r => {
     const cat = forcedCategory || (r[CONFIG.categoryField] || "").trim() || "Коктейли";
+
+    // Если это кухня (forcedCategory === "Кухня") – берём специальные поля
+    let compound, method, serving;
+    if (cat === "Кухня") {
+      compound = r["Состав"] || "—";          // можно оставить, но блок не покажется
+      method = r["Описание"] || "—";          // ← колонка "Описание"
+      serving = r["Граммовка"] || "—";        // ← колонка "Граммовка"
+    } else {
+      compound = r["Состав"] || "—";
+      method = r["Метод"] || r["Приготовление"] || "—";
+      serving = r["Подача"] || r["Вес"] || "—";
+    }
+
     return {
       name: r["Название"] || "Без названия",
       cat: cat,
       tags: (r["Теги"] || "").split(/\s+/).filter(Boolean),
-      compound: r["Состав"] || "—",
-      method: r["Метод"] || r["Приготовление"] || "—",
-      serving: r["Подача"] || r["Вес"] || "—",
+      compound: compound,
+      method: method,
+      serving: serving,
       photo: r["Фото-ссылка"] || null,
     };
   });
@@ -545,24 +558,24 @@ function render(){
     // Собираем HTML одной карточки: лицевая сторона (front) + оборот (back).
     // ${...} — сюда подставляются реальные данные конкретного рецепта.
     card.innerHTML = `
-      <div class="card-inner">
-        <div class="face front ${isKitchen ? 'kitchen' : ''}">
-          <div>
-            <div class="cat-icon">${icon}</div>
-            <div class="card-name">${item.name}</div>
-            <div class="tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
-          </div>
-          <div class="tap-hint">тапни для рецепта →</div>
-        </div>
-        <div class="face back">
-          ${item.photo ? `<img class="back-photo" src="${item.photo}" alt="${item.name}">` : ''}
-          <div class="ticket-name">${item.name}</div>
-          <b>Состав</b>
-          <div class="ingredient-table">${ingredientRows(item.compound)}</div>
-          <b>${isKitchen ? 'Приготовление' : 'Метод'}</b>${item.method}
-          <b>${isKitchen ? 'Вес' : 'Подача'}</b>${item.serving}
-        </div>
-      </div>`;
+  <div class="card-inner">
+    <div class="face front ${isKitchen ? 'kitchen' : ''}">
+      <div>
+        <div class="cat-icon">${icon}</div>
+        <div class="card-name">${item.name}</div>
+        <div class="tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
+      </div>
+      <div class="tap-hint">тапни для рецепта →</div>
+    </div>
+    <div class="face back">
+      ${item.photo ? `<img class="back-photo" src="${item.photo}" alt="${item.name}">` : ''}
+      <div class="ticket-name">${item.name}</div>
+      <!-- Блок "Состав" показываем только для НЕ-кухни -->
+      ${!isKitchen ? `<b>Состав</b><div class="ingredient-table">${ingredientRows(item.compound)}</div>` : ''}
+      <b>${isKitchen ? 'Описание' : 'Метод'}</b>${item.method}
+      <b>${isKitchen ? 'Граммовка' : 'Подача'}</b>${item.serving}
+    </div>
+  </div>`;
 
     const front = card.querySelector(".front");
     const back = card.querySelector(".back");
