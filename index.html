@@ -1,59 +1,55 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <!-- Универсальные мобильные иконки для BeerFactory -->
-
-<!-- Настройки для iPhone -->
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-title" content="BeerFactoryBot">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<!-- Настройки для Android и других браузеров -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
-
-<!-- Иконка для вкладок браузера на ПК -->
-<link rel="icon" type="image/png" sizes="32x32" href="apple-touch-icon.png">
 <meta charset="UTF-8">
+<!-- viewport — чтобы на телефоне сайт не масштабировался как десктопная версия -->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>BeerFactory — меню</title>
 <style>
+  /* Подключаем 3 шрифта: Bebas Neue — крупные заголовки/названия,
+     IBM Plex Mono — "чековый"/тикетный текст, Oswald — обычный текст */
   @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700&display=swap');
 
+  /* Цветовая палитра сайта — меняешь цвет тут один раз, применяется везде,
+     где используется var(--имя) */
   :root{
-    --bg: #17110c;
-    --bg-2: #1f1710;
-    --paper: #f1e6d2;
-    --paper-dim: #e3d3b6;
-    --amber: #e8a33d;
-    --copper: #c1652f;
-    --olive: #6f7a55;
-    --ink: #241a10;
-    --ink-soft: #4a3b28;
-    --line: rgba(241,230,210,0.14);
+    --bg: #17110c;         /* основной тёмный фон страницы */
+    --bg-2: #1f1710;       /* чуть светлее фон — карточки, поле поиска */
+    --paper: #f1e6d2;      /* цвет "бумаги" на обороте карточки (рецепт) */
+    --paper-dim: #e3d3b6;  /* приглушённый вариант бумаги — подзаголовки */
+    --amber: #e8a33d;      /* акцентный янтарный — активные кнопки, теги коктейлей */
+    --copper: #c1652f;     /* акцентный медный — кнопка "Сюрприз" */
+    --olive: #6f7a55;      /* не используется напрямую, запасной акцент */
+    --ink: #241a10;        /* тёмный текст на светлой "бумаге" */
+    --ink-soft: #4a3b28;   /* приглушённый тёмный — пунктирные линии на бумаге */
+    --line: rgba(241,230,210,0.14); /* тонкие разделительные линии на тёмном фоне */
   }
 
+  /* box-sizing:border-box — padding и border не увеличивают итоговый размер блока,
+     это упрощает вёрстку с фиксированной шириной */
   * { box-sizing: border-box; }
 
   body{
     margin:0;
+    /* лёгкое янтарное свечение по углам фона, поверх основного тёмного цвета */
     background:
       radial-gradient(circle at 15% -10%, rgba(232,163,61,0.14), transparent 45%),
       radial-gradient(circle at 100% 0%, rgba(193,101,47,0.10), transparent 40%),
       var(--bg);
     color: var(--paper);
     font-family: 'Oswald', sans-serif;
-    padding: 0 0 60px;
-    min-height:100vh;
+    padding: 0 0 60px;    /* отступ снизу, чтобы последняя карточка не липла к краю */
+    min-height:100vh;     /* фон растягивается на весь экран, даже если контента мало */
   }
 
+  /* Шапка сайта: название бара + подзаголовок */
   header{
     padding: 34px 20px 20px;
     text-align:center;
     border-bottom: 1px solid var(--line);
   }
   .kicker{
+    /* маленькая строка над заголовком: "@BEERFACTORYbot · справочник" */
     font-family:'IBM Plex Mono', monospace;
     font-size:11px;
     letter-spacing:0.25em;
@@ -62,6 +58,7 @@
     margin-bottom:8px;
   }
   h1{
+    /* крупная надпись BEERFACTORY с янтарным градиентом внутри текста */
     font-family:'Bebas Neue', sans-serif;
     font-size: 52px;
     letter-spacing: 0.04em;
@@ -70,9 +67,10 @@
     background: linear-gradient(180deg, #f6e6c6, var(--amber));
     -webkit-background-clip: text;
     background-clip: text;
-    color: transparent;
+    color: transparent;   /* сам текст прозрачный, виден только градиент фона */
   }
   .sub{
+    /* строка под заголовком: "коктейли & кухня — тапни по карточке" */
     font-family:'IBM Plex Mono', monospace;
     font-size:12px;
     color: var(--paper-dim);
@@ -80,9 +78,10 @@
     margin-top:10px;
   }
 
+  /* Блок с поиском, вкладками категорий и кнопкой "Сюрприз" */
   .controls{
-    max-width: 640px;
-    margin: 22px auto 0;
+    max-width: 640px;     /* ограничиваем ширину на больших экранах */
+    margin: 22px auto 0;  /* auto по бокам — блок центрируется */
     padding: 0 16px;
   }
   .search-wrap{
@@ -90,6 +89,7 @@
     margin-bottom:14px;
   }
   input[type="text"]{
+    /* поле поиска, стилизованное под "чек" — пунктирная рамка */
     width:100%;
     background: var(--bg-2);
     border: 1px dashed var(--line);
@@ -101,12 +101,13 @@
     outline:none;
   }
   input[type="text"]::placeholder{ color: rgba(241,230,210,0.35); }
-  input[type="text"]:focus{ border-color: var(--amber); }
+  input[type="text"]:focus{ border-color: var(--amber); } /* подсветка при клике в поле */
 
+  /* Ряд кнопок-вкладок категорий (Всё меню / Коктейли / Кухня / ...) */
   .tabs{
     display:flex;
     gap:8px;
-    flex-wrap:wrap;
+    flex-wrap:wrap;       /* если кнопок много — переносятся на новую строку */
   }
   .tab{
     font-family:'IBM Plex Mono', monospace;
@@ -114,7 +115,7 @@
     letter-spacing:0.05em;
     text-transform:uppercase;
     padding:9px 14px;
-    border-radius:999px;
+    border-radius:999px;  /* очень большое значение = форма "таблетки" */
     border:1px solid var(--line);
     background:transparent;
     color: var(--paper-dim);
@@ -122,6 +123,7 @@
     transition: all .15s ease;
   }
   .tab.active{
+    /* стиль активной (выбранной) вкладки — заливка янтарным */
     background: var(--amber);
     border-color: var(--amber);
     color: var(--ink);
@@ -129,6 +131,7 @@
   }
   .tab:not(.active):hover{ border-color: var(--amber); color: var(--amber); }
 
+  /* Строка "62 позиций" + кнопка "Не знаю, что выбрать" */
   .toolbar{
     display:flex;
     justify-content:space-between;
@@ -151,42 +154,51 @@
   }
   .surprise-btn:hover{ background: var(--copper); color: var(--bg); }
 
+  /* Сетка карточек рецептов */
   .grid{
     max-width: 640px;
     margin: 26px auto 0;
     padding: 0 16px;
     display:grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr;   /* по умолчанию — одна колонка (телефон) */
     gap: 16px;
   }
   @media (min-width: 560px){
+    /* на экранах шире 560px — две колонки карточек */
     .grid{ grid-template-columns: 1fr 1fr; }
   }
 
+  /* === Карточка рецепта (переворачивающаяся плитка) === */
   .card{
-    perspective: 1200px;
-    height: 190px;
-    transition: height .4s ease;
+    perspective: 1200px;   /* создаёт 3D-эффект для переворота дочернего блока */
+    height: 190px;         /* высота карточки в закрытом виде */
+    transition: height .4s ease; /* плавное изменение высоты при перевороте */
   }
   .card.flipped{
+    /* когда карточка перевёрнута — высота берётся из --flip-h,
+       это значение JS выставляет индивидуально под каждый рецепт (см. render()) */
     height: var(--flip-h, 340px);
   }
   .card-inner{
+    /* внутренний контейнер, который физически крутится на 180 градусов */
     position:relative;
     width:100%; height:100%;
     transition: transform .5s cubic-bezier(.4,.2,.2,1);
-    transform-style: preserve-3d;
+    transform-style: preserve-3d;  /* обязательно для 3D-переворота */
   }
   .card.flipped .card-inner{ transform: rotateY(180deg); }
 
   .face{
+    /* общие стили для лицевой (.front) и обратной (.back) стороны карточки —
+       обе занимают всю площадь .card-inner и накладываются друг на друга */
     position:absolute; inset:0;
-    backface-visibility:hidden;
+    backface-visibility:hidden;    /* скрывает сторону, когда она "повёрнута к нам спиной" */
     border-radius:6px;
     padding:16px;
     overflow:hidden;
   }
   .front{
+    /* лицевая сторона: название + теги, тёмный фон */
     background: var(--bg-2);
     border: 1px solid var(--line);
     display:flex;
@@ -196,6 +208,8 @@
   }
   .front:hover{ border-color: var(--amber); }
   .front::after{
+    /* декоративная "перфорация" (пунктир из кружочков) снизу лицевой карточки —
+       как отрывной край чека */
     content:"";
     position:absolute;
     left:0; right:0; bottom:0;
@@ -204,8 +218,9 @@
     background-size: 14px 14px;
     background-position: 4px 3px;
   }
-  .cat-icon{ font-size:22px; opacity:0.85; }
+  .cat-icon{ font-size:22px; opacity:0.85; } /* эмодзи-иконка категории (🍹/🍽/...) */
   .card-name{
+    /* крупное название рецепта на лицевой стороне */
     font-family:'Bebas Neue', sans-serif;
     font-size: 26px;
     letter-spacing:0.02em;
@@ -214,9 +229,11 @@
     color: var(--paper);
   }
   .tags{
+    /* контейнер тегов — переносятся на новую строку, если не влезают */
     display:flex; flex-wrap:wrap; gap:5px;
   }
   .tag{
+    /* один тег-"бейджик" (например "ягодный") */
     font-family:'IBM Plex Mono', monospace;
     font-size:9px;
     text-transform:uppercase;
@@ -228,20 +245,25 @@
     border: 1px solid rgba(232,163,61,0.25);
   }
   .back-photo{
+    /* фото рецепта на обороте карточки:
+       фиксированная высота + object-fit:contain — фото всегда видно целиком,
+       без обрезки краёв и без разрастания на весь экран */
     width:100%;
     height:150px;
     object-fit:contain;
-    background: rgba(36,26,16,0.06);
+    background: rgba(36,26,16,0.06); /* лёгкий фон под фото, если пропорции не совпадают с рамкой */
     border-radius:4px;
     margin-bottom:8px;
     display:block;
-}
+  }
   .kitchen .tag{
+    /* у категории "Кухня" теги перекрашены в оливковый — визуально отличать от коктейлей */
     background: rgba(111,122,85,0.16);
     color: #b7c396;
     border-color: rgba(111,122,85,0.35);
   }
   .tap-hint{
+    /* мелкая подсказка "тапни для рецепта →" внизу лицевой карточки */
     font-family:'IBM Plex Mono', monospace;
     font-size:9px;
     color: rgba(241,230,210,0.3);
@@ -249,16 +271,19 @@
   }
 
   .back{
+    /* обратная сторона карточки — светлая "бумага" с рецептом */
     background: var(--paper);
     color: var(--ink);
-    transform: rotateY(180deg);
+    transform: rotateY(180deg); /* заранее повёрнута на 180°, чтобы после общего
+                                    переворота .card-inner текст читался нормально */
     font-family:'IBM Plex Mono', monospace;
     font-size:11.5px;
     line-height:1.5;
     cursor:pointer;
-    overflow-y:auto;
+    overflow-y:auto;    /* если рецепт длиннее карточки — появится вертикальная прокрутка */
   }
   .back b{
+    /* заголовки полей на обороте: "Состав", "Метод", "Подача" */
     display:block;
     color: var(--copper);
     font-family:'Oswald', sans-serif;
@@ -269,6 +294,7 @@
   }
   .back b:first-child{ margin-top:0; }
   .back .ticket-name{
+    /* название рецепта на обороте, повторяется сверху над составом */
     font-family:'Bebas Neue', sans-serif;
     font-size:20px;
     color: var(--ink);
@@ -277,14 +303,16 @@
     padding-bottom:6px;
     margin-bottom:6px;
   }
-  .ingredient-table{ margin-bottom:2px; }
+  .ingredient-table{ margin-bottom:2px; } /* обёртка вокруг списка ингредиентов */
   .ingredient-row{
+    /* одна строка одного ингредиента — с тонким пунктиром снизу, как строка чека */
     padding: 3px 0;
     border-bottom: 1px dashed rgba(74,59,40,0.22);
   }
-  .ingredient-row:last-child{ border-bottom:none; }
+  .ingredient-row:last-child{ border-bottom:none; } /* у последней строки линию убираем */
 
   .empty{
+    /* сообщение "Ничего не нашлось", когда поиск/фильтр не дал результатов */
     text-align:center;
     padding: 50px 20px;
     font-family:'IBM Plex Mono', monospace;
@@ -293,6 +321,7 @@
   }
 
   .note{
+    /* сноска внизу страницы про демо-данные / подключение NocoDB */
     max-width:640px;
     margin: 34px auto 0;
     padding: 14px 20px;
@@ -305,6 +334,8 @@
   }
 
   @media (prefers-reduced-motion: reduce){
+    /* уважаем настройку "уменьшить анимацию" в системе пользователя —
+       отключаем анимацию переворота карточки */
     .card-inner{ transition:none; }
   }
 </style>
@@ -319,20 +350,29 @@
 
 <div class="controls">
   <div class="search-wrap">
+    <!-- id="search" — по этому id JS ловит ввод текста и фильтрует карточки -->
     <input type="text" id="search" placeholder="найти по названию или тегу...">
   </div>
+  <!-- id="tabs" — контейнер кнопок категорий; data-cat= передаёт JS,
+       какую категорию показывать при клике на кнопку -->
   <div class="tabs" id="tabs">
     <button class="tab active" data-cat="all">Всё меню</button>
     <button class="tab" data-cat="Коктейли">🍹 Коктейли</button>
     <button class="tab" data-cat="Кухня">🍽 Кухня</button>
+    <!-- НОВЫЕ КАТЕГОРИИ: значение в data-cat должно ТОЧНО совпадать
+         с текстом в колонке "Категория" в NocoDB -->
+    <button class="tab" data-cat="Заготовки">🧂 Заготовки</button>
+    <button class="tab" data-cat="Лимонады">🍋 Лимонады</button>
   </div>
   <div class="toolbar">
-    <span id="count">— позиций</span>
+    <span id="count">— позиций</span> <!-- сюда JS подставляет число найденных позиций -->
     <button class="surprise-btn" id="surprise">🎲 Не знаю, что выбрать</button>
   </div>
 </div>
 
+<!-- id="grid" — пустой контейнер, JS заполняет его карточками при каждом render() -->
 <div class="grid" id="grid"></div>
+<!-- показывается вместо сетки, если под текущий поиск/фильтр ничего не подошло -->
 <div class="empty" id="empty" style="display:none">Ничего не нашлось. Попробуй другое слово.</div>
 
 <div class="note">
@@ -342,6 +382,9 @@
 </div>
 
 <script>
+// ====== ДЕМО-ДАННЫЕ ======
+// Используются только пока useRemote: false (см. CONFIG ниже) или если запрос
+// к NocoDB не удался — чтобы страница не оставалась пустой.
 const ITEMS = [
   {name:"Яблоко-Саган", cat:"Коктейли", tags:["ягодный","освежающий"], compound:"Джин 40мл · яблочный сок 60мл · сироп саган-дайля 15мл · лайм", method:"Шейк со льдом, двойное процеживание", serving:"Коктейльный бокал, долька яблока"},
   {name:"Дымная Гавана", cat:"Коктейли", tags:["ромовый","крепкий"], compound:"Тёмный ром 45мл · ананасовый сок 40мл · лайм 15мл · биттер", method:"Билд в стакане на льду, лёгкое копчение веточкой розмарина", serving:"Хайбол, лёд-кубик"},
@@ -355,58 +398,92 @@ const ITEMS = [
 
 // ====== ПОДКЛЮЧЕНИЕ К СВОЕЙ БАЗЕ NOCODB ======
 // Заполни и поставь useRemote: true, чтобы сайт брал данные из твоей таблицы
-// вместо демо-примеров ниже. Инструкция — в README.
+// вместо демо-примеров выше.
 const CONFIG = {
-  useRemote: true,                                // true — включить реальные данные
-  baseUrl: "https://nocodb.puzzlebot.top",        // адрес твоего NocoDB
-  tableId: "mqo5ga1nk6h8lv8",                     // ID таблицы «Меню»
+  useRemote: true,                                // true — включить реальные данные, false — демо
+  baseUrl: "https://nocodb.puzzlebot.top",         // адрес твоего NocoDB
+  tableId: "mqo5ga1nk6h8lv8",                      // ID таблицы «Меню»
   token: "FO6A3bSrEwpApDVOsufZcYS5Si0G9gREHJR2yUF-", // NocoDB → Tokens → Create new token
-  categoryField: "Категория",                     // колонка со значением "Коктейли"/"Кухня"
+  categoryField: "Категория",                      // колонка со значением "Коктейли"/"Кухня"/...
 };
 
-let DATA = ITEMS; // пока не подключена база — используются демо-примеры выше
+// НОВОЕ: иконка для каждой категории на лицевой стороне карточки.
+// Если добавишь ещё одну категорию — впиши сюда её иконку по такому же образцу.
+const CATEGORY_ICONS = { "Коктейли":"🍹", "Кухня":"🍽", "Заготовки":"🧂", "Лимонады":"🍋" };
 
+// DATA — рабочий массив, который реально показывается на экране.
+// Пока не загрузятся реальные данные, в нём лежат демо-примеры (ITEMS).
+let DATA = ITEMS;
+
+// Загружает строки из таблицы NocoDB через её REST API и превращает их
+// в тот же формат объектов, что и в ITEMS выше, чтобы остальной код
+// не знал разницы между демо-данными и реальными.
 async function loadData(){
-  if(!CONFIG.useRemote) return;
+  if(!CONFIG.useRemote) return; // если выключено — просто оставляем демо-данные
+
   try{
+    // limit=1000 — с запасом, чтобы забрать все строки таблицы разом
     const url = `${CONFIG.baseUrl}/api/v2/tables/${CONFIG.tableId}/records?limit=1000`;
+    // заголовок xc-token — это и есть авторизация в NocoDB (см. CONFIG.token)
     const res = await fetch(url, { headers: { "xc-token": CONFIG.token } });
     if(!res.ok) throw new Error("NocoDB ответил " + res.status);
+
     const json = await res.json();
-    const rows = json.list || [];
+    const rows = json.list || []; // NocoDB возвращает { list: [...], pageInfo: {...} }
+
+    // Превращаем "сырые" строки NocoDB (с русскими именами колонок)
+    // в единый внутренний формат карточки
     DATA = rows.map(r => {
-      const isKitchen = (r[CONFIG.categoryField] || "").trim() === "Кухня"
-        || Boolean(r["Приготовление"] || r["Вес"]);
+      // Берём категорию прямо из колонки NocoDB. Если колонка пустая — считаем,
+      // что это Коктейли (историческая совместимость со старой таблицей).
+      const cat = (r[CONFIG.categoryField] || "").trim() || "Коктейли";
       return {
         name: r["Название"] || "Без названия",
-        cat: isKitchen ? "Кухня" : "Коктейли",
+        cat: cat,
+        // Теги хранятся одной строкой через пробел — разбиваем в массив
         tags: (r["Теги"] || "").split(/\s+/).filter(Boolean),
         compound: r["Состав"] || "—",
+        // У кухни поле называется "Приготовление", у коктейлей — "Метод";
+        // берём то, что заполнено
         method: r["Метод"] || r["Приготовление"] || "—",
+        // Аналогично: "Подача" у коктейлей, "Вес" у кухни
         serving: r["Подача"] || r["Вес"] || "—",
         photo: r["Фото-ссылка"] || null,
       };
     });
   }catch(e){
+    // Если что-то пошло не так (нет интернета, неверный токен, CORS и т.п.) —
+    // не ломаем страницу, а просто оставляем демо-данные и пишем ошибку в консоль
     console.error("Не удалось загрузить NocoDB, показаны демо-данные:", e);
   }
 }
 
+// state — текущее состояние экрана: какая вкладка выбрана и что введено в поиск.
+// Меняется по кликам/вводу, и по нему render() решает, что показывать.
 let state = { cat: "all", query: "" };
 
+// Проверяет, подходит ли один рецепт под текущий фильтр (категория + поиск)
 function matches(item){
   if(state.cat !== "all" && item.cat !== state.cat) return false;
   if(state.query){
     const q = state.query.toLowerCase();
+    // ищем совпадение и в названии, и в тегах одновременно
     const hay = (item.name + " " + item.tags.join(" ")).toLowerCase();
     if(!hay.includes(q)) return false;
   }
   return true;
 }
 
-// Единицы измерения, после которых обычно начинается новый ингредиент
+// Список единиц измерения, после которых обычно начинается следующий
+// ингредиент в тексте (используется как запасной вариант разбивки на строки,
+// если в самой ячейке NocoDB нет явных переносов)
 const UNIT_PATTERN = /(\d+(?:[.,]\d+)?\s*(?:мл|гр|г|кг|л|шт|долька|дольки|долек|слайс|слайса|слайсов|лист|листик|листика|листа|стебель|стебля|палочка|палочки|щепотка|щепотки|капля|капли|капель|зубчик|зубчика|зубчиков|пучок|пучка|ч\.л\.|ст\.л\.)\.?)\s+(?=[А-ЯЁ])/g;
 
+// Превращает текст состава в HTML-список строк-ингредиентов ("как таблица").
+// Порядок попыток разбивки:
+//  1) если в ячейке буквально написан текст "\n" — разбить по нему
+//  2) если стоит настоящий перенос строки — разбить по нему
+//  3) иначе — попытаться расставить переносы самим, по единицам измерения
 function ingredientRows(text){
   let raw = String(text || "—").trim();
   let lines;
@@ -422,27 +499,36 @@ function ingredientRows(text){
     lines = withBreaks.split(/\n+/);
   }
   lines = lines.map(s => s.trim()).filter(Boolean);
-  if(lines.length === 0) lines = ["—"];
+  if(lines.length === 0) lines = ["—"]; // на случай полностью пустого состава
+  // каждая строка — отдельный <div>, стилизованный в CSS как строка чека
   return lines.map(line => `<div class="ingredient-row">${line}</div>`).join("");
 }
 
+// Главная функция отрисовки: перестраивает всю сетку карточек с нуля
+// на основе текущих DATA + state. Вызывается при любом изменении
+// (смена вкладки, ввод в поиск, загрузка новых данных).
 function render(){
   const grid = document.getElementById("grid");
   const empty = document.getElementById("empty");
-  const list = DATA.filter(matches);
+  const list = DATA.filter(matches); // берём только подходящие под фильтр рецепты
+
   document.getElementById("count").textContent = list.length + " позиций";
-  grid.innerHTML = "";
-  empty.style.display = list.length ? "none" : "block";
+  grid.innerHTML = ""; // очищаем сетку перед перерисовкой
+  empty.style.display = list.length ? "none" : "block"; // показываем "Ничего не нашлось" при пустом списке
 
   list.forEach(item => {
-    const isKitchen = item.cat === "Кухня";
+    const isKitchen = item.cat === "Кухня"; // влияет на подписи "Приготовление"/"Вес"
+    const icon = CATEGORY_ICONS[item.cat] || "🍹"; // иконка категории, по умолчанию — коктейльная
+
     const card = document.createElement("div");
     card.className = "card";
+    // Собираем HTML одной карточки: лицевая сторона (front) + оборот (back).
+    // ${...} — сюда подставляются реальные данные конкретного рецепта.
     card.innerHTML = `
       <div class="card-inner">
         <div class="face front ${isKitchen ? 'kitchen' : ''}">
           <div>
-            <div class="cat-icon">${isKitchen ? '🍽' : '🍹'}</div>
+            <div class="cat-icon">${icon}</div>
             <div class="card-name">${item.name}</div>
             <div class="tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
           </div>
@@ -457,46 +543,63 @@ function render(){
           <b>${isKitchen ? 'Вес' : 'Подача'}</b>${item.serving}
         </div>
       </div>`;
+
     const front = card.querySelector(".front");
     const back = card.querySelector(".back");
+    // клик по лицевой стороне — переворачиваем карточку
     front.addEventListener("click", () => card.classList.add("flipped"));
+    // клик по обороту — переворачиваем обратно
     back.addEventListener("click", () => card.classList.remove("flipped"));
+
     grid.appendChild(card);
-    // растягиваем карточку под реальную высоту содержимого оборота (фото + рецепт)
+
+    // Растягиваем карточку под реальную высоту содержимого оборота
+    // (фото + текст рецепта), чтобы при перевороте не было ни обрезки,
+    // ни лишнего пустого места. scrollHeight — полная высота содержимого,
+    // даже если оно сейчас визуально не помещается.
     const naturalHeight = back.scrollHeight + 8;
     card.style.setProperty("--flip-h", Math.max(naturalHeight, 220) + "px");
   });
 }
 
+// Клик по любой кнопке-вкладке категории: переключаем активную кнопку
+// и текущую категорию в state, затем перерисовываем сетку
 document.getElementById("tabs").addEventListener("click", (e) => {
   const btn = e.target.closest(".tab");
-  if(!btn) return;
+  if(!btn) return; // клик мимо кнопки — игнорируем
   document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
   btn.classList.add("active");
-  state.cat = btn.dataset.cat;
+  state.cat = btn.dataset.cat; // значение из data-cat="..." в HTML кнопки
   render();
 });
 
+// Ввод текста в поле поиска — фильтруем карточки "на лету", без кнопки "Найти"
 document.getElementById("search").addEventListener("input", (e) => {
   state.query = e.target.value.trim();
   render();
 });
 
+// Кнопка "🎲 Не знаю, что выбрать": выбираем случайный рецепт из текущей
+// выбранной категории (или из всех, если выбрано "Всё меню"), прокручиваем
+// к нему и автоматически переворачиваем карточку
 document.getElementById("surprise").addEventListener("click", () => {
   const pool = DATA.filter(i => state.cat === "all" ? true : i.cat === state.cat);
   const pick = pool[Math.floor(Math.random() * pool.length)];
-  document.getElementById("search").value = "";
+  document.getElementById("search").value = ""; // сбрасываем поиск, чтобы рецепт точно был виден
   state.query = "";
   render();
+  // ищем в уже отрисованной сетке карточку с нужным названием
   const cards = [...document.querySelectorAll(".card-name")];
   const target = cards.find(c => c.textContent === pick.name);
   if(target){
     const card = target.closest(".card");
     card.scrollIntoView({behavior:"smooth", block:"center"});
+    // небольшая задержка, чтобы сначала долистать, а потом уже перевернуть карточку
     setTimeout(() => card.classList.add("flipped"), 350);
   }
 });
 
+// Точка входа: сначала грузим данные (демо или NocoDB), затем отрисовываем сетку
 loadData().then(render);
 </script>
 
