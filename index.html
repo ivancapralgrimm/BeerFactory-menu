@@ -355,10 +355,37 @@
        отключаем анимацию переворота карточки */
     .card-inner{ transition:none; }
   }
+  .to-top{
+  /* плавающая кнопка "наверх" — появляется только после прокрутки вниз */
+  position: fixed;
+  right: 18px;
+  bottom: 22px;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: var(--amber);
+  color: var(--ink);
+  border: none;
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(10px);
+  transition: opacity .25s ease, transform .25s ease;
+  z-index: 50;
+}
+.to-top.visible{
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
 </style>
 </head>
 <body>
-
+<!-- Кнопка "наверх": JS показывает/скрывает её по прокрутке, см. .to-top в <style> -->
+<button class="to-top" id="toTop" aria-label="Наверх">↑</button>
 <header>
   <div class="kicker">@BEERFACTORYbot · справочник</div>
   <h1>BEERFACTORY</h1>
@@ -645,7 +672,19 @@ document.getElementById("surprise").addEventListener("click", () => {
     setTimeout(() => card.classList.add("flipped"), 350);
   }
 });
-
+// Кнопка "наверх": показываем только если прокрутили больше, чем на 1 экран вниз —
+// чтобы не мозолила глаза, пока список короткий или мы уже в начале страницы
+const toTopBtn = document.getElementById("toTop");
+window.addEventListener("scroll", () => {
+  if(window.scrollY > window.innerHeight * 0.6){
+    toTopBtn.classList.add("visible");
+  } else {
+    toTopBtn.classList.remove("visible");
+  }
+});
+toTopBtn.addEventListener("click", () => {
+  window.scrollTo({ top: 0, behavior: "smooth" });
+});
 // Точка входа: сначала грузим данные (демо или NocoDB), затем отрисовываем сетку
 loadData().then(render);
 </script>
