@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="BeerFactory">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#000000">
+<link rel="icon" type="image/png" sizes="32x32" href="apple-touch-icon.png">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>BeerFactory — Обучение</title>
+<style>
+  /* Те же 3 базовых источника, что и на главной (index.html) — палитра и Oswald/IBM Plex Mono
+     скопированы оттуда один в один. Плюс Source Serif 4 — ТОЛЬКО для длинного текста статей
+     (Oswald — display-шрифт, для абзацев в 200-400 слов он "кричит"). */
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700;900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
+
+  :root{
+    --bg: #17110c;
+    --bg-2: #1f1710;
+    --paper: #f1e6d2;
+    --paper-dim: #e3d3b6;
+    --amber: #e8a33d;
+    --copper: #c1652f;
+    --ink: #241a10;
+    --ink-soft: #4a3b28;
+    --line: rgba(241,230,210,0.14);
+  }
+  * { box-sizing: border-box; }
+
+  /* Жёстко запрещаем горизонтальный скролл странице — сайт мобильный,
+     "расползание" по бокам чаще всего именно отсюда: какой-то внутренний
+     элемент чуть шире экрана и раздвигает весь документ */
+  html, body{
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% -10%, rgba(232,163,61,0.14), transparent 45%),
+      radial-gradient(circle at 100% 0%, rgba(193,101,47,0.10), transparent 40%),
+      var(--bg);
+    color: var(--paper);
+    font-family: 'Oswald', sans-serif;
+    padding: 0 0 80px;
+    min-height:100vh;
+  }
+
+  /* Индикатор прогресса чтения — тонкая полоса под хедером, растёт по скроллу */
+  .progress-rail{ position: sticky; top:0; z-index:40; height:3px; background: var(--line); }
+  .progress-fill{
+    height:100%; width:0%;
+    background: linear-gradient(90deg, var(--copper), var(--amber));
+    transition: width .1s linear;
+  }
+
+  header{
+    padding: 30px 20px 20px;
+    text-align:center;
+    border-bottom: 1px solid var(--line);
+  }
+  .kicker{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.25em;
+    text-transform:uppercase;
+    color: var(--amber);
+    margin-bottom:8px;
+  }
+  h1{
+    font-family:'Oswald', sans-serif;
+    font-weight: 900;
+    font-size: 42px;
+    letter-spacing: 0.02em;
+    margin: 0;
+    line-height:0.9;
+    background: linear-gradient(180deg, #f6e6c6, var(--amber));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .sub{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12px;
+    color: var(--paper-dim);
+    opacity:0.7;
+    margin-top:10px;
+  }
+  .back-link{
+    display:inline-block;
+    margin-top:16px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    color: var(--amber);
+    text-decoration:none;
+    border:1px dashed var(--line);
+    padding:8px 16px;
+    border-radius:3px;
+  }
+  .back-link:hover{ border-color: var(--amber); }
+
+  /* ===================== ОДНА КОЛОНКА, ЖЁСТКО ОГРАНИЧЕНА ПО ШИРИНЕ =====================
+     Та же ширина/отступы, что у .controls на главной странице — единственный "источник
+     правды" по горизонтали на этой странице, ничего шире него быть не должно. */
+  .page{
+    width: 100%;
+    max-width: 640px;
+    margin: 20px auto 0;
+    padding: 0 16px;
+  }
+
+  /* ---------- Поиск + кнопка "Меню" (вместо горизонтальных кнопок-тем) ---------- */
+  .topbar{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+
+  .menu-trigger{
+    flex-shrink:0;
+    width:auto;
+    display:flex; align-items:center; gap:8px;
+    background: var(--bg-2);
+    border: 1px dashed var(--line);
+    border-radius: 999px;
+    padding: 10px 14px;
+    cursor:pointer;
+    font-family:'IBM Plex Mono', monospace;
+    color: var(--paper);
+  }
+  .menu-trigger:hover{ border-color: var(--amber); }
+  .menu-trigger .mt-icon{ font-size:14px; flex-shrink:0; }
+  .menu-trigger .mt-label{
+    font-size:12px; letter-spacing:0.03em; text-transform:uppercase;
+    color: var(--amber); font-weight:600;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-width: 34vw;
+  }
+  .menu-trigger .mt-chev{ color: var(--paper-dim); font-size:11px; flex-shrink:0; }
+
+  /* ---------- Поиск-лупа: пилюля справа, раскрывается до меню ---------- */
+  .search-slot{
+    flex:1;
+    display:flex; justify-content:flex-end; align-items:center;
+    position:relative;
+    min-width:0;
+  }
+  .search-icon-btn{
+    flex-shrink:0;
+    width:40px; height:40px;
+    border-radius:50%;
+    background: var(--bg-2);
+    border: 1px dashed var(--line);
+    color: var(--paper);
+    font-size:15px;
+    cursor:pointer;
+  }
+  .search-icon-btn:hover{ border-color: var(--amber); }
+  .search-slot.open .search-icon-btn{ display:none; }
+
+  input[type="text"]#search{
+    width:0; min-width:0; opacity:0;
+    padding:0; border:none;
+    background: var(--bg-2);
+    border-radius: 999px;
+    color: var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    font-size: 13px;
+    outline:none;
+    transition: width .25s ease, opacity .2s ease, padding .25s ease, border-color .15s ease;
+  }
+  .search-slot.open input[type="text"]#search{
+    width:100%; opacity:1;
+    padding: 11px 16px;
+    border: 1px dashed var(--line);
+  }
+  .search-slot.open input[type="text"]#search:focus{ border-color: var(--amber); }
+  input[type="text"]#search::placeholder{ color: rgba(241,230,210,0.35); }
+
+  /* ---------- Лента: тема → статьи-аккордеоны ---------- */
+  .feed{ margin-top: 22px; }
+  .topic-group{ margin-bottom: 30px; }
+  .topic-title{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size:20px;
+    letter-spacing:0.01em;
+    color: var(--paper);
+    display:flex; align-items:center; gap:9px;
+    margin: 0 0 12px;
+    padding-bottom:9px;
+    border-bottom: 1px dashed var(--line);
+  }
+  .topic-title .ic{ font-size:18px; }
+
+  .entry{
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .entry-head{
+    width:100%;
+    display:flex; align-items:center; gap:10px;
+    background:none; border:none; cursor:pointer;
+    padding: 13px 14px;
+    text-align:left;
+    color: var(--paper);
+  }
+  .entry-head:hover .entry-title{ color: var(--amber); }
+  .entry-icon{ font-size:17px; flex-shrink:0; }
+  .entry-title{
+    flex:1; min-width:0;
+    font-family:'Oswald', sans-serif;
+    font-weight:600;
+    font-size:15.5px;
+    transition: color .15s ease;
+  }
+  .entry-meta{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color: rgba(241,230,210,0.4);
+    white-space:nowrap;
+    flex-shrink:0;
+  }
+  .entry-chevron{
+    font-size:12px; color: var(--paper-dim);
+    transition: transform .3s ease;
+    flex-shrink:0;
+  }
+  .entry.open .entry-chevron{ transform: rotate(180deg); }
+
+  /* Раскрытие на чистом CSS-гриде — без замера scrollHeight в JS */
+  .entry-body{ display:grid; grid-template-rows: 0fr; transition: grid-template-rows .35s ease; }
+  .entry.open .entry-body{ grid-template-rows: 1fr; }
+  .entry-body-inner{ overflow:hidden; min-height:0; }
+  .entry-content{
+    padding: 2px 14px 18px;
+    font-family:'Source Serif 4', Georgia, serif;
+    font-size: 15.5px;
+    line-height: 1.7;
+    color: var(--paper-dim);
+  }
+  .entry-content p{ margin: 0 0 13px; }
+  .entry-content mark{
+    background: rgba(232,163,61,0.18);
+    color: var(--amber);
+    padding: 0 2px;
+    border-radius:2px;
+  }
+
+  .entry-note{ margin-top: 4px; }
+  .note-toggle{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:11px;
+    color: var(--copper);
+    background:none; border: 1px dashed var(--line);
+    border-radius:3px;
+    padding: 6px 11px;
+    cursor:pointer;
+  }
+  .note-toggle:hover{ border-color: var(--copper); }
+  .note-area{
+    display:none;
+    width:100%;
+    margin-top:8px;
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    border-radius:4px;
+    color: var(--paper);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:12.5px;
+    padding:10px;
+    min-height:60px;
+    resize:vertical;
+  }
+  .note-area.visible{ display:block; }
+  .note-saved{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:10px;
+    color: rgba(241,230,210,0.35);
+    margin-top:4px;
+    height:12px;
+  }
+
+  .empty{
+    text-align:center;
+    padding: 50px 20px;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color: rgba(241,230,210,0.4);
+  }
+  .empty .big{ font-size:32px; display:block; margin-bottom:10px; }
+
+  /* ===================== БОКОВОЙ СЛАЙДЕР С ТЕМАМИ ===================== */
+  .drawer-overlay{
+    position: fixed; inset:0;
+    background: rgba(0,0,0,0.55);
+    opacity:0; pointer-events:none;
+    transition: opacity .25s ease;
+    z-index: 90;
+  }
+  .drawer-overlay.open{ opacity:1; pointer-events:auto; }
+
+  .drawer{
+    position: fixed; top:0; left:0; bottom:0;
+    width: min(300px, 82vw);
+    background: var(--bg-2);
+    border-right: 1px solid var(--line);
+    z-index: 91;
+    transform: translateX(-100%);
+    transition: transform .3s cubic-bezier(.4,.1,.2,1);
+    display:flex; flex-direction:column;
+    box-shadow: 10px 0 30px rgba(0,0,0,0.4);
+  }
+  .drawer.open{ transform: translateX(0); }
+
+  .drawer-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 20px 16px 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .drawer-head .dh-title{
+    font-family:'Oswald', sans-serif;
+    font-weight:700;
+    font-size:19px;
+    color: var(--paper);
+  }
+  .drawer-close{
+    background:none; border:none;
+    color: var(--paper-dim);
+    font-size:22px; line-height:1;
+    cursor:pointer;
+    padding:4px 8px;
+  }
+  .drawer-close:hover{ color: var(--amber); }
+
+  .drawer-list{
+    flex:1;
+    overflow-y:auto;
+    padding: 10px 8px;
+    display:flex; flex-direction:column; gap:2px;
+  }
+  .drawer-item{
+    display:flex; align-items:center; gap:10px;
+    width:100%;
+    text-align:left;
+    background:transparent;
+    border:none;
+    border-left: 3px solid transparent;
+    padding: 12px 12px;
+    border-radius: 0 6px 6px 0;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:13px;
+    color: var(--paper-dim);
+    cursor:pointer;
+    transition: all .15s ease;
+  }
+  .drawer-item .di-icon{ font-size:16px; flex-shrink:0; }
+  .drawer-item .di-label{ flex:1; }
+  .drawer-item .di-count{ font-size:11px; opacity:.45; }
+  .drawer-item:hover{ background: rgba(232,163,61,0.07); color: var(--paper); }
+  .drawer-item.active{
+    border-left-color: var(--amber);
+    background: rgba(232,163,61,0.12);
+    color: var(--amber);
+    font-weight:600;
+  }
+
+  /* Кнопка "наверх" — как на главной */
+  .to-top{
+    position: fixed; right: 18px; bottom: 22px;
+    width: 46px; height: 46px; border-radius: 50%;
+    background: var(--amber); color: var(--ink); border:none;
+    font-size: 20px; line-height: 1; cursor:pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+    opacity:0; pointer-events:none; transform: translateY(10px);
+    transition: opacity .25s ease, transform .25s ease;
+    z-index: 50;
+  }
+  .to-top.visible{ opacity:1; pointer-events:auto; transform:translateY(0); }
+
+  @media (prefers-reduced-motion: reduce){
+    .entry-body, .entry-chevron, .drawer, .drawer-overlay{ transition:none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="progress-rail"><div class="progress-fill" id="progressFill"></div></div>
+
+<header>
+  <div class="kicker">@BEERFACTORYbot · обучение персонала</div>
+  <h1>BEERFACTORY</h1>
+  <div class="sub">история, правила и матчасть — читай по темам</div>
+  <a href="index.html" class="back-link">← Назад к ТТК</a>
+</header>
+
+<div class="page">
+  <div class="topbar">
+    <button class="menu-trigger" id="menuBtn">
+      <span class="mt-icon">☰</span>
+      <span class="mt-label" id="menuLabel">Все темы</span>
+      <span class="mt-chev">▾</span>
+    </button>
+    <div class="search-slot" id="searchSlot">
+      <button class="search-icon-btn" id="searchIconBtn" aria-label="Поиск">🔍</button>
+      <input type="text" id="search" placeholder="найти по статьям...">
+    </div>
+  </div>
+
+  <main class="feed" id="feed"></main>
+
+  <div class="empty" id="empty" style="display:none">
+    <span class="big">📭</span>
+    <span id="emptyText">Ничего не нашлось. Попробуй другое слово.</span>
+  </div>
+</div>
+
+<!-- Боковой слайдер с темами -->
+<div class="drawer-overlay" id="drawerOverlay"></div>
+<aside class="drawer" id="drawer">
+  <div class="drawer-head">
+    <span class="dh-title">Темы</span>
+    <button class="drawer-close" id="drawerClose" aria-label="Закрыть">×</button>
+  </div>
+  <nav class="drawer-list" id="drawerList"></nav>
+</aside>
+
+<button class="to-top" id="toTop" aria-label="Наверх">↑</button>
+
+<script>
+// ====== ДЕМО-СТАТЬИ ======
+// Показываются, если файл training-data.txt ещё не загружен в репозиторий
+// или запрос к нему не удался — чтобы страница не оставалась пустой.
+const DEMO_ITEMS = [
+  {
+    category: "История алкоголя", icon: "🍺",
+    title: "Откуда взялось виски",
+    body: "Виски появилось в Ирландии и Шотландии около 15 века. Название происходит от гэльского \"uisce beatha\" — \"вода жизни\". Изначально его делали монахи как лекарство.\n\nК 18 веку производство разрослось настолько, что власти обложили его налогом — это привело к волне подпольных вискокурен в горах Шотландии."
+  },
+  {
+    category: "История алкоголя", icon: "🍺",
+    title: "Как появилось пиво",
+    body: "Пиво — один из старейших напитков человечества, первые упоминания найдены в Древнем Шумере более 5000 лет назад.\n\nВ Средние века пиво в Европе часто было безопаснее воды — процесс варки убивал большинство патогенов, поэтому его пили даже дети."
+  },
+  {
+    category: "Правила бара", icon: "📋",
+    title: "Дресс-код персонала",
+    body: "Чёрная рубашка, тёмные брюки, закрытая обувь. Бейдж обязателен на смене.\n\nУкрашения — минимально, ничего звенящего и цепляющегося за поднос."
+  },
+  {
+    category: "Правила бара", icon: "📋",
+    title: "Как встречать гостей",
+    body: "Приветствие в течение 30 секунд после посадки за стол. Улыбка, зрительный контакт, представиться по имени.\n\nЕсли видишь, что гость уже минуту ищет взглядом официанта — подойди, даже если не твой стол."
+  },
+  {
+    category: "Виды напитков", icon: "🥃",
+    title: "Что такое настойка",
+    body: "Настойка — алкогольный напиток, полученный настаиванием трав, ягод или фруктов на спиртовой основе. Отличается от ликёра меньшим содержанием сахара."
+  },
+];
+
+// Формат training-data.txt:
+//   "### 🍺 Название категории"  — новая категория (эмодзи в начале — опционально)
+//   "## Заголовок статьи"        — новая карточка внутри категории
+//   всё остальное — текст статьи, до следующего ## или ###
+async function loadTrainingData(){
+  try{
+    const res = await fetch('training-data.txt');
+    if(!res.ok) throw new Error("training-data.txt не найден (" + res.status + ")");
+    const raw = await res.text();
+    if(!raw.trim()) throw new Error("training-data.txt пустой");
+    return parseTrainingData(raw);
+  }catch(e){
+    console.warn("Файл training-data.txt не подключён, показаны демо-статьи:", e);
+    return DEMO_ITEMS;
+  }
+}
+
+function parseTrainingData(raw){
+  const lines = raw.split('\n');
+  const items = [];
+  let currentCategory = 'Общее';
+  let currentIcon = '📖';
+  let currentTitle = null;
+  let currentBody = [];
+
+  function pushCurrent(){
+    if(currentTitle){
+      items.push({
+        category: currentCategory,
+        icon: currentIcon,
+        title: currentTitle,
+        body: currentBody.join('\n').trim()
+      });
+    }
+  }
+
+  for(const line of lines){
+    if(line.startsWith('### ')){
+      pushCurrent();
+      const rawCat = line.replace('### ', '').trim();
+      const parts = rawCat.split(' ');
+      if(parts.length > 1 && /\p{Extended_Pictographic}/u.test(parts[0])){
+        currentIcon = parts[0];
+        currentCategory = parts.slice(1).join(' ');
+      } else {
+        currentIcon = '📖';
+        currentCategory = rawCat;
+      }
+      currentTitle = null;
+      currentBody = [];
+    } else if(line.startsWith('## ')){
+      pushCurrent();
+      currentTitle = line.replace('## ', '').trim();
+      currentBody = [];
+    } else {
+      currentBody.push(line);
+    }
+  }
+  pushCurrent();
+  return items;
+}
+
+let ALL_ITEMS = [];
+let state = { cat: 'all', query: '' };
+
+function noteKey(item){ return 'bf_training_note::' + item.category + '::' + item.title; }
+function readingTime(text){
+  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.round(words / 180));
+}
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function matches(item){
+  if(state.cat !== 'all' && item.category !== state.cat) return false;
+  if(state.query){
+    const q = state.query.toLowerCase();
+    const hay = (item.title + ' ' + item.body).toLowerCase();
+    if(!hay.includes(q)) return false;
+  }
+  return true;
+}
+
+// ===== Боковой слайдер с темами =====
+const drawer = document.getElementById('drawer');
+const drawerOverlay = document.getElementById('drawerOverlay');
+
+function openDrawer(){
+  drawer.classList.add('open');
+  drawerOverlay.classList.add('open');
+  document.body.style.overflow = 'hidden'; // блокируем скролл фона под слайдером
+}
+function closeDrawer(){
+  drawer.classList.remove('open');
+  drawerOverlay.classList.remove('open');
+  document.body.style.overflow = '';
+}
+document.getElementById('menuBtn').addEventListener('click', openDrawer);
+document.getElementById('drawerClose').addEventListener('click', closeDrawer);
+drawerOverlay.addEventListener('click', closeDrawer);
+
+function renderDrawer(){
+  const categories = [...new Map(ALL_ITEMS.map(i => [i.category, i.icon])).entries()];
+  const listEl = document.getElementById('drawerList');
+  const allCount = ALL_ITEMS.length;
+
+  let html = `<button class="drawer-item ${state.cat==='all'?'active':''}" data-cat="all">
+      <span class="di-icon">📚</span><span class="di-label">Все темы</span><span class="di-count">${allCount}</span>
+    </button>`;
+
+  categories.forEach(([cat, icon]) => {
+    const count = ALL_ITEMS.filter(i => i.category === cat).length;
+    html += `<button class="drawer-item ${state.cat===cat?'active':''}" data-cat="${escapeHtml(cat)}">
+      <span class="di-icon">${icon}</span><span class="di-label">${escapeHtml(cat)}</span><span class="di-count">${count}</span>
+    </button>`;
+  });
+
+  listEl.innerHTML = html;
+}
+
+document.getElementById('drawerList').addEventListener('click', (e) => {
+  const btn = e.target.closest('.drawer-item');
+  if(!btn) return;
+  state.cat = btn.dataset.cat;
+  renderDrawer();
+  updateMenuTrigger();
+  render();
+  closeDrawer(); // выбрали тему — слайдер сворачивается сам
+});
+
+function updateMenuTrigger(){
+  const cats = new Map(ALL_ITEMS.map(i => [i.category, i.icon]));
+  const label = state.cat === 'all' ? 'Все темы' : (cats.get(state.cat) + ' ' + state.cat);
+  document.getElementById('menuLabel').textContent = label;
+}
+
+// ===== Лента статей =====
+function render(){
+  const feed = document.getElementById('feed');
+  const empty = document.getElementById('empty');
+  const emptyText = document.getElementById('emptyText');
+  const list = ALL_ITEMS.filter(matches);
+
+  feed.innerHTML = '';
+
+  if(list.length === 0){
+    empty.style.display = 'block';
+    emptyText.textContent = ALL_ITEMS.length === 0
+      ? 'Статей пока нет — как только они появятся, лента заполнится сама.'
+      : 'Ничего не нашлось. Попробуй другое слово.';
+    return;
+  }
+  empty.style.display = 'none';
+
+  // группируем отфильтрованный список по темам, сохраняя порядок первого появления
+  const groups = [];
+  const groupByCat = new Map();
+  list.forEach(item => {
+    if(!groupByCat.has(item.category)){
+      const g = { category: item.category, icon: item.icon, items: [] };
+      groupByCat.set(item.category, g);
+      groups.push(g);
+    }
+    groupByCat.get(item.category).items.push(item);
+  });
+
+  groups.forEach(group => {
+    const section = document.createElement('section');
+    section.className = 'topic-group';
+    section.innerHTML = `<h2 class="topic-title"><span class="ic">${group.icon}</span>${escapeHtml(group.category)}</h2>`;
+
+    group.items.forEach(item => {
+      const mins = readingTime(item.body);
+      const paragraphs = item.body.split('\n\n')
+        .map(p => `<p>${escapeHtml(p).replace(/\n/g,'<br>')}</p>`).join('');
+
+      const entry = document.createElement('article');
+      entry.className = 'entry';
+      entry.innerHTML = `
+        <button class="entry-head">
+          <span class="entry-icon">${item.icon}</span>
+          <span class="entry-title">${escapeHtml(item.title)}</span>
+          <span class="entry-meta">${mins} мин</span>
+          <span class="entry-chevron">⌄</span>
+        </button>
+        <div class="entry-body">
+          <div class="entry-body-inner">
+            <div class="entry-content">
+              ${paragraphs}
+              <div class="entry-note">
+                <button class="note-toggle">📝 Заметка</button>
+                <textarea class="note-area" placeholder="твоя личная заметка (видна только тебе на этом телефоне)"></textarea>
+                <div class="note-saved"></div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+
+      const head = entry.querySelector('.entry-head');
+      head.addEventListener('click', () => entry.classList.toggle('open'));
+
+      const noteBtn = entry.querySelector('.note-toggle');
+      const noteArea = entry.querySelector('.note-area');
+      const noteSaved = entry.querySelector('.note-saved');
+      const key = noteKey(item);
+      const existing = localStorage.getItem(key);
+      if(existing){ noteArea.value = existing; noteSaved.textContent = 'заметка сохранена'; }
+
+      noteBtn.addEventListener('click', () => {
+        noteArea.classList.toggle('visible');
+        if(noteArea.classList.contains('visible')) noteArea.focus();
+      });
+      let saveTimer = null;
+      noteArea.addEventListener('input', () => {
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(() => {
+          if(noteArea.value.trim()){
+            localStorage.setItem(key, noteArea.value);
+            noteSaved.textContent = 'сохранено ✓';
+          } else {
+            localStorage.removeItem(key);
+            noteSaved.textContent = '';
+          }
+        }, 500);
+      });
+
+      section.appendChild(entry);
+    });
+
+    feed.appendChild(section);
+  });
+}
+
+function pluralStatey(n){
+  const mod10 = n % 10, mod100 = n % 100;
+  if(mod10 === 1 && mod100 !== 11) return 'статья';
+  if([2,3,4].includes(mod10) && ![12,13,14].includes(mod100)) return 'статьи';
+  return 'статей';
+}
+
+const searchSlot = document.getElementById('searchSlot');
+const searchInput = document.getElementById('search');
+
+document.getElementById('searchIconBtn').addEventListener('click', () => {
+  searchSlot.classList.add('open');
+  searchInput.focus();
+});
+searchInput.addEventListener('blur', () => {
+  if(!searchInput.value.trim()) searchSlot.classList.remove('open');
+});
+searchInput.addEventListener('input', (e) => {
+  state.query = e.target.value.trim();
+  render();
+});
+
+// ===== Индикатор прогресса чтения =====
+const progressFill = document.getElementById('progressFill');
+function updateProgress(){
+  const h = document.documentElement;
+  const scrolled = h.scrollTop;
+  const max = h.scrollHeight - h.clientHeight;
+  progressFill.style.width = (max > 0 ? (scrolled / max) * 100 : 0) + '%';
+}
+window.addEventListener('scroll', updateProgress);
+
+// ===== Кнопка "наверх" =====
+const toTopBtn = document.getElementById('toTop');
+window.addEventListener('scroll', () => {
+  toTopBtn.classList.toggle('visible', window.scrollY > window.innerHeight * 0.6);
+});
+toTopBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+loadTrainingData().then(items => {
+  ALL_ITEMS = items;
+  renderDrawer();
+  updateMenuTrigger();
+  render();
+});
+</script>
+
+</body>
+</html>
