@@ -674,10 +674,6 @@ function render(){
 
     group.items.forEach(item => {
       const mins = readingTime(item.body);
-      // было:
-const paragraphs = item.body.split('\n\n')
-  .map(p => `<p>${escapeHtml(p).replace(/\n/g,'<br>')}</p>`).join('');
-
 // стало:
 const paragraphs = item.body.split('\n\n').map(formatParagraph).join('');
 
