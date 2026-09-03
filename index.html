@@ -567,283 +567,142 @@ const ITEMS = [
   {name:"Крылья BBQ острые", cat:"Кухня", tags:["острая","горячая"], compound:"Куриные крылья, соус барбекю, чили-хлопья, сельдерей", method:"Маринад 2 часа, жарка во фритюре, глазирование соусом", serving:"Тарелка, соус блю-чиз, стебель сельдерея"},
 ];
 
-// ====== ПОДКЛЮЧЕНИЕ К СВОЕЙ БАЗЕ NOCODB ======
-// Заполни и поставь useRemote: true, чтобы сайт брал данные из твоей таблицы
-// вместо демо-примеров выше.
+// ====== ДЕМО-ДАННЫЕ ======
+// Используются только если не удалось загрузить CSV-файлы
+const ITEMS_FALLBACK = [
+  {name:"Яблоко-Саган", cat:"Коктейль", tags:["ягодный","освежающий"], compound:"Джин 40мл · яблочный сок 60мл · сироп саган-дайля 15мл · лайм", method:"Шейк со льдом, двойное процеживание", serving:"Коктейльный бокал, долька яблока", photo:null},
+  {name:"Дымная Гавана", cat:"Коктейль", tags:["ромовый","крепкий"], compound:"Тёмный ром 45мл · ананасовый сок 40мл · лайм 15мл · биттер", method:"Билд в стакане на льду, лёгкое копчение веточкой розмарина", serving:"Хайбол, лёд-кубик", photo:null},
+  {name:"Мясная тарелка", cat:"Кухня", tags:["мясная","на компанию"], compound:"Хамон, брезаола, суджук, домашняя ветчина, оливки, орехи", method:"Нарезка тонкими слайсами, выложить веером по кругу тарелки", serving:"Деревянная доска, 6 персон", photo:null},
+];
+
+// ====== НАСТРОЙКИ ======
 const CONFIG = {
-  useRemote: true,                                // true — включить реальные данные, false — демо
-  baseUrl: "https://nocodb.puzzlebot.top",         // адрес твоего NocoDB
-  tableId: "mqo5ga1nk6h8lv8",                      // ID таблицы «Меню» (коктейли)
-  kitchenTableId: "mc7m3sa4m2x12dd",       // ID отдельной таблицы с кухней
-  token: "FO6A3bSrEwpApDVOsufZcYS5Si0G9gREHJR2yUF-", // NocoDB → Tokens → Create new token (общий для обеих таблиц, если это один аккаунт)
-  categoryField: "Категория",                      // колонка со значением "Коктейли"/"Кухня"/...
+  barCsv: "Бар.csv",      // ← файл с коктейлями, заготовками, лимонадами, настойками
+  kitchenCsv: "Кухня.csv" // ← файл с кухней
 };
 
-
-// НОВОЕ: иконка для каждой категории на лицевой стороне карточки.
-// Если добавишь ещё одну категорию — впиши сюда её иконку по такому же образцу.
-// Иконка для каждой категории на карточке берётся прямо из кнопки-вкладки —
-// эмодзи прописывается ОДИН раз, в HTML кнопки (например data-cat="Кухня">🍽 Кухня),
-// и больше нигде переписывать его не нужно. Если позже добавишь новую вкладку —
-// просто впиши в неё эмодзи перед названием, карта соберётся сама.
+// Иконки для категорий (берутся из кнопок в слайдере)
 const CATEGORY_ICONS = {};
 document.querySelectorAll('#tabs .drawer-item[data-cat]').forEach(btn => {
   const cat = btn.dataset.cat;
-  if (cat === 'all') return; // у вкладки "Всё меню" своей иконки на карточках нет
-  const firstWord = btn.querySelector('.di-label').textContent.trim().split(/\s+/)[0]; // текст кнопки до первого пробела — это эмодзи
+  if (cat === 'all') return;
+  const label = btn.querySelector('.di-label').textContent.trim();
+  const firstWord = label.split(/\s+/)[0];
   CATEGORY_ICONS[cat] = firstWord;
 });
 
-// DATA — рабочий массив, который реально показывается на экране.
-// Пока не загрузятся реальные данные, в нём лежат демо-примеры (ITEMS).
-let DATA = ITEMS;
+// DATA — рабочий массив
+let DATA = ITEMS_FALLBACK;
 
-// Загружает строки из таблицы NocoDB через её REST API и превращает их
-// в тот же формат объектов, что и в ITEMS выше, чтобы остальной код
-// не знал разницы между демо-данными и реальными.
-// Достаёт все строки из ОДНОЙ таблицы NocoDB и приводит их к единому формату карточки.
-// forcedCategory — если передан, у всех строк этой таблицы категория ставится
-// принудительно (нужно для отдельной таблицы "Кухня" — там своей колонки
-// "Категория" может и не быть, мы и так знаем, что там всё "Кухня").
-async function fetchTable(tableId, forcedCategory){
-  const url = `${CONFIG.baseUrl}/api/v2/tables/${tableId}/records?limit=1000`;
-  const res = await fetch(url, { headers: { "xc-token": CONFIG.token } });
-  if(!res.ok) throw new Error("NocoDB ответил " + res.status + " для таблицы " + tableId);
-  const json = await res.json();
-  const rows = json.list || [];
-  return rows.map(r => {
-    const cat = forcedCategory || (r[CONFIG.categoryField] || "").trim() || "Коктейли";
-
-    // Если это кухня (forcedCategory === "Кухня") – берём специальные поля
-    let compound, method, serving;
-    if (cat === "Кухня") {
-      compound = r["Состав"] || "—";          // можно оставить, но блок не покажется
-      method = r["Описание"] || "—";          // ← колонка "Описание"
-      serving = r["Граммовка"] || "—";        // ← колонка "Граммовка"
-    } else {
-      compound = r["Состав"] || "—";
-      method = r["Метод"] || r["Приготовление"] || "—";
-      serving = r["Подача"] || r["Вес"] || "—";
+// ====== ФУНКЦИЯ ЗАГРУЗКИ CSV ======
+async function loadCSV(fileName, forcedCategory) {
+  try {
+    const response = await fetch(fileName);
+    if (!response.ok) {
+      throw new Error(`Не удалось загрузить ${fileName} (${response.status})`);
+    }
+    const csvText = await response.text();
+    
+    const lines = csvText.split('\n').filter(line => line.trim() !== '');
+    if (lines.length < 2) {
+      throw new Error(`Файл ${fileName} пуст или содержит только заголовки`);
+    }
+    
+    const headers = parseCSVLine(lines[0]).map(h => h.trim().replace(/^"|"$/g, ''));
+    
+    const required = ['Название'];
+    const missing = required.filter(col => !headers.includes(col));
+    if (missing.length > 0) {
+      throw new Error(`В ${fileName} отсутствуют колонки: ${missing.join(', ')}`);
     }
 
-    return {
-      name: r["Название"] || "Без названия",
-      cat: cat,
-      tags: (r["Теги"] || "").split(/\s+/).filter(Boolean),
-      compound: compound,
-      method: method,
-      serving: serving,
-      photo: r["Фото-ссылка"] || null,
-    };
-  });
+    const result = [];
+    for (let i = 1; i < lines.length; i++) {
+      const values = parseCSVLine(lines[i]);
+      const item = {};
+      headers.forEach((header, index) => {
+        item[header] = values[index] ? values[index].trim() : '';
+      });
+
+      let cat = forcedCategory || item['Категория'] || 'Коктейль';
+      
+      const catLower = cat.toLowerCase();
+      if (catLower === 'коктейль' || catLower === 'коктейли') cat = 'Коктейль';
+      else if (catLower === 'кухня') cat = 'Кухня';
+      else if (catLower === 'заготовка' || catLower === 'заготовки') cat = 'Заготовка';
+      else if (catLower === 'лимонад' || catLower === 'лимонады') cat = 'Лимонад';
+      else if (catLower === 'настойка' || catLower === 'настойки') cat = 'Настойка';
+
+      let method, serving;
+      if (cat === 'Кухня') {
+        method = item['Описание'] || item['Метод'] || '—';
+        serving = item['Граммовка'] || item['Вес'] || '—';
+      } else {
+        method = item['Метод'] || item['Приготовление'] || '—';
+        serving = item['Подача'] || item['Вес'] || '—';
+      }
+
+      result.push({
+        name: item['Название'] || 'Без названия',
+        cat: cat,
+        tags: item['Теги'] ? item['Теги'].split(/[|,;]\s*/).map(t => t.trim()).filter(Boolean) : [],
+        compound: item['Состав'] || '—',
+        method: method,
+        serving: serving,
+        photo: item['Фото-ссылка'] || item['Фото'] || null,
+      });
+    }
+    
+    console.log(`✅ Загружено ${result.length} позиций из ${fileName}`);
+    return result;
+  } catch (error) {
+    console.error(`❌ Ошибка загрузки ${fileName}:`, error);
+    return [];
+  }
 }
 
-// Загружает обе таблицы (коктейли + кухня) и склеивает их в один массив DATA.
-// Именно поэтому во вкладке "Всё меню" видны позиции из обеих таблиц сразу —
-// а вкладки "Коктейли"/"Кухня" по-прежнему фильтруют по полю cat, как раньше.
+function parseCSVLine(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+    } else if (char === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+// ====== ЗАГРУЗКА ДАННЫХ ИЗ ДВУХ CSV-ФАЙЛОВ ======
 async function loadData(){
-  if(!CONFIG.useRemote) return; // если выключено — просто оставляем демо-данные
-
-  try{
-    // Promise.all — оба запроса летят параллельно, а не один за другим
-    const [mainItems, kitchenItems] = await Promise.all([
-      fetchTable(CONFIG.tableId, null),               // основная таблица — категория берётся из колонки
-      CONFIG.kitchenTableId
-        ? fetchTable(CONFIG.kitchenTableId, "Кухня")   // вторая таблица — категория всегда "Кухня"
-        : Promise.resolve([]),
+  try {
+    const [barItems, kitchenItems] = await Promise.all([
+      loadCSV(CONFIG.barCsv, null),
+      loadCSV(CONFIG.kitchenCsv, "Кухня")
     ]);
-    DATA = [...mainItems, ...kitchenItems]; // склеиваем оба списка в один
-  }catch(e){
-    console.error("Не удалось загрузить NocoDB, показаны демо-данные:", e);
+    
+    const allItems = [...barItems, ...kitchenItems];
+    
+    if (allItems.length > 0) {
+      DATA = allItems;
+      console.log(`✅ Всего загружено ${DATA.length} позиций (Бар: ${barItems.length}, Кухня: ${kitchenItems.length})`);
+    } else {
+      console.warn("⚠️ Не загружено ни одной позиции, используются демо-данные");
+      DATA = ITEMS_FALLBACK;
+    }
+  } catch (error) {
+    console.error("❌ Ошибка загрузки CSV:", error);
+    DATA = ITEMS_FALLBACK;
   }
 }
-
-// state — текущее состояние экрана: какая вкладка выбрана и что введено в поиск.
-// Меняется по кликам/вводу, и по нему render() решает, что показывать.
-let state = { cat: "all", query: "" };
-
-// Проверяет, подходит ли один рецепт под текущий фильтр (категория + поиск)
-function matches(item){
-  if(state.cat !== "all" && item.cat !== state.cat) return false;
-  if(state.query){
-    const q = state.query.toLowerCase();
-    // ищем совпадение и в названии, и в тегах одновременно
-    const hay = (item.name + " " + item.tags.join(" ")).toLowerCase();
-    if(!hay.includes(q)) return false;
-  }
-  return true;
-}
-
-// Список единиц измерения, после которых обычно начинается следующий
-// ингредиент в тексте (используется как запасной вариант разбивки на строки,
-// если в самой ячейке NocoDB нет явных переносов)
-const UNIT_PATTERN = /(\d+(?:[.,]\d+)?\s*(?:мл|гр|г|кг|л|шт|долька|дольки|долек|слайс|слайса|слайсов|лист|листик|листика|листа|стебель|стебля|палочка|палочки|щепотка|щепотки|капля|капли|капель|зубчик|зубчика|зубчиков|пучок|пучка|ч\.л\.|ст\.л\.)\.?)\s+(?=[А-ЯЁ])/g;
-
-// Превращает текст состава в HTML-список строк-ингредиентов ("как таблица").
-// Порядок попыток разбивки:
-//  1) если в ячейке буквально написан текст "\n" — разбить по нему
-//  2) если стоит настоящий перенос строки — разбить по нему
-//  3) иначе — попытаться расставить переносы самим, по единицам измерения
-function ingredientRows(text){
-  let raw = String(text || "—").trim();
-  let lines;
-  if(/\\n/.test(raw)){
-    // в ячейке вручную набран текст "\n" — используем его как разделитель
-    lines = raw.split(/\\n+/);
-  } else if(/\n/.test(raw)){
-    // в ячейке настоящий перенос строки — используем его
-    lines = raw.split(/\n+/);
-  } else {
-    // иначе пытаемся сами расставить переносы по единицам измерения
-    const withBreaks = raw.replace(UNIT_PATTERN, "$1\n");
-    lines = withBreaks.split(/\n+/);
-  }
-  lines = lines.map(s => s.trim()).filter(Boolean);
-  if(lines.length === 0) lines = ["—"]; // на случай полностью пустого состава
-  // каждая строка — отдельный <div>, стилизованный в CSS как строка чека
-  return lines.map(line => `<div class="ingredient-row">${line}</div>`).join("");
-}
-
-// Главная функция отрисовки: перестраивает всю сетку карточек с нуля
-// на основе текущих DATA + state. Вызывается при любом изменении
-// (смена вкладки, ввод в поиск, загрузка новых данных).
-function render(){
-  const grid = document.getElementById("grid");
-  const empty = document.getElementById("empty");
-  const list = DATA.filter(matches); // берём только подходящие под фильтр рецепты
-
-  document.getElementById("count").textContent = list.length + " позиций";
-  grid.innerHTML = ""; // очищаем сетку перед перерисовкой
-  empty.style.display = list.length ? "none" : "block"; // показываем "Ничего не нашлось" при пустом списке
-
-  list.forEach(item => {
-    const isKitchen = item.cat === "Кухня"; // влияет на подписи "Приготовление"/"Вес"
-    const icon = CATEGORY_ICONS[item.cat] || "🍹"; // иконка категории, по умолчанию — коктейльная
-
-    const card = document.createElement("div");
-    card.className = "card";
-    // Собираем HTML одной карточки: лицевая сторона (front) + оборот (back).
-    // ${...} — сюда подставляются реальные данные конкретного рецепта.
-    card.innerHTML = `
-  <div class="card-inner">
-    <div class="face front ${isKitchen ? 'kitchen' : ''}">
-      <div>
-        <div class="cat-icon">${icon}</div>
-        <div class="card-name">${item.name}</div>
-        <div class="tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
-      </div>
-      <div class="tap-hint">тапни для рецепта →</div>
-    </div>
-    <div class="face back">
-      ${item.photo ? `<img class="back-photo" src="${item.photo}" alt="${item.name}">` : ''}
-      <div class="ticket-name">${item.name}</div>
-      <!-- Блок "Состав" показываем только для НЕ-кухни -->
-      ${!isKitchen ? `<b>Состав</b><div class="ingredient-table">${ingredientRows(item.compound)}</div>` : ''}
-      <b>${isKitchen ? 'Описание' : 'Метод'}</b>${item.method}
-      <b>${isKitchen ? 'Граммовка' : 'Подача'}</b>${item.serving}
-    </div>
-  </div>`;
-
-    const front = card.querySelector(".front");
-    const back = card.querySelector(".back");
-    // клик по лицевой стороне — переворачиваем карточку
-    front.addEventListener("click", () => card.classList.add("flipped"));
-    // клик по обороту — переворачиваем обратно
-    back.addEventListener("click", () => card.classList.remove("flipped"));
-
-    grid.appendChild(card);
-
-    // Растягиваем карточку под реальную высоту содержимого оборота
-    // (фото + текст рецепта), чтобы при перевороте не было ни обрезки,
-    // ни лишнего пустого места. scrollHeight — полная высота содержимого,
-    // даже если оно сейчас визуально не помещается.
-    const naturalHeight = back.scrollHeight + 8;
-    card.style.setProperty("--flip-h", Math.max(naturalHeight, 220) + "px");
-  });
-}
-
-// Боковой слайдер с категориями
-const drawer = document.getElementById("drawer");
-const drawerOverlay = document.getElementById("drawerOverlay");
-const menuLabel = document.getElementById("menuLabel");
-
-function openDrawer(){
-  drawer.classList.add("open");
-  drawerOverlay.classList.add("open");
-  document.body.style.overflow = "hidden";
-}
-function closeDrawer(){
-  drawer.classList.remove("open");
-  drawerOverlay.classList.remove("open");
-  document.body.style.overflow = "";
-}
-document.getElementById("menuBtn").addEventListener("click", openDrawer);
-document.getElementById("drawerClose").addEventListener("click", closeDrawer);
-drawerOverlay.addEventListener("click", closeDrawer);
-
-// Клик по любой кнопке-категории в слайдере: переключаем активную,
-// обновляем label на кнопке "Меню", перерисовываем сетку и закрываем слайдер
-document.getElementById("tabs").addEventListener("click", (e) => {
-  const btn = e.target.closest(".drawer-item");
-  if(!btn) return; // клик мимо кнопки — игнорируем
-  document.querySelectorAll(".drawer-item").forEach(t => t.classList.remove("active"));
-  btn.classList.add("active");
-  state.cat = btn.dataset.cat; // значение из data-cat="..." в HTML кнопки
-  menuLabel.textContent = btn.querySelector(".di-label").textContent;
-  render();
-  closeDrawer();
-});
-
-// Лупа: раскрывает поле поиска до края кнопки "Меню"
-const searchSlot = document.getElementById("searchSlot");
-const searchInput = document.getElementById("search");
-document.getElementById("searchIconBtn").addEventListener("click", () => {
-  searchSlot.classList.add("open");
-  searchInput.focus();
-});
-searchInput.addEventListener("blur", () => {
-  if(!searchInput.value.trim()) searchSlot.classList.remove("open");
-});
-
-// Ввод текста в поле поиска — фильтруем карточки "на лету", без кнопки "Найти"
-document.getElementById("search").addEventListener("input", (e) => {
-  state.query = e.target.value.trim();
-  render();
-});
-
-// Кнопка "🎲 Не знаю, что выбрать": выбираем случайный рецепт из текущей
-// выбранной категории (или из всех, если выбрано "Всё меню"), прокручиваем
-// к нему и автоматически переворачиваем карточку
-document.getElementById("surprise").addEventListener("click", () => {
-  const pool = DATA.filter(i => state.cat === "all" ? true : i.cat === state.cat);
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  document.getElementById("search").value = ""; // сбрасываем поиск, чтобы рецепт точно был виден
-  state.query = "";
-  render();
-  // ищем в уже отрисованной сетке карточку с нужным названием
-  const cards = [...document.querySelectorAll(".card-name")];
-  const target = cards.find(c => c.textContent === pick.name);
-  if(target){
-    const card = target.closest(".card");
-    card.scrollIntoView({behavior:"smooth", block:"center"});
-    // небольшая задержка, чтобы сначала долистать, а потом уже перевернуть карточку
-    setTimeout(() => card.classList.add("flipped"), 350);
-  }
-});
-// Кнопка "наверх": показываем только если прокрутили больше, чем на 1 экран вниз —
-// чтобы не мозолила глаза, пока список короткий или мы уже в начале страницы
-const toTopBtn = document.getElementById("toTop");
-window.addEventListener("scroll", () => {
-  if(window.scrollY > window.innerHeight * 0.6){
-    toTopBtn.classList.add("visible");
-  } else {
-    toTopBtn.classList.remove("visible");
-  }
-});
-toTopBtn.addEventListener("click", () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-});
-// Точка входа: сначала грузим данные (демо или NocoDB), затем отрисовываем сетку
 loadData().then(render);
 </script>
 
