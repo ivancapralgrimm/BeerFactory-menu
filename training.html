@@ -245,6 +245,18 @@
     color: var(--paper-dim);
   }
   .entry-content p{ margin: 0 0 13px; }
+  .entry-content strong{ color: var(--paper); font-weight:600; }
+  .entry-content em{ font-style:italic; }
+  .entry-content ul, .entry-content ol{ margin: 0 0 13px; padding-left: 20px; }
+  .entry-content li{ margin-bottom: 5px; }
+  .entry-content blockquote{
+    margin: 0 0 13px;
+    padding: 8px 12px;
+    border-left: 3px solid var(--amber);
+    background: rgba(232,163,61,0.08);
+    font-style: italic;
+    color: var(--paper);
+  }
   .entry-content mark{
     background: rgba(232,163,61,0.18);
     color: var(--amber);
@@ -537,7 +549,31 @@ function readingTime(text){
 function escapeHtml(s){
   return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
+// Мини-разметка внутри training-data.txt (применяется ПОСЛЕ escapeHtml — безопасно):
+//   **жирный**   → <strong>
+//   *курсив*      → <em>
+//   строка "- "   → пункт списка
+//   строка "> "   → цитата-подсказка
+function inlineFormat(escaped){
+  return escaped
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(^|[^*])\*([^*]+?)\*(?!\*)/g, '$1<em>$2</em>');
+}
 
+function formatParagraph(raw){
+  const lines = raw.split('\n').filter(l => l.trim() !== '');
+  if(lines.length === 0) return '';
+
+  if(lines.every(l => l.trim().startsWith('- '))){
+    const items = lines.map(l => `<li>${inlineFormat(escapeHtml(l.trim().slice(2)))}</li>`).join('');
+    return `<ul>${items}</ul>`;
+  }
+  if(lines.every(l => l.trim().startsWith('> '))){
+    const text = lines.map(l => inlineFormat(escapeHtml(l.trim().slice(2)))).join('<br>');
+    return `<blockquote>${text}</blockquote>`;
+  }
+  return `<p>${inlineFormat(escapeHtml(raw)).replace(/\n/g,'<br>')}</p>`;
+}
 function matches(item){
   if(state.cat !== 'all' && item.category !== state.cat) return false;
   if(state.query){
@@ -638,8 +674,12 @@ function render(){
 
     group.items.forEach(item => {
       const mins = readingTime(item.body);
-      const paragraphs = item.body.split('\n\n')
-        .map(p => `<p>${escapeHtml(p).replace(/\n/g,'<br>')}</p>`).join('');
+      // было:
+const paragraphs = item.body.split('\n\n')
+  .map(p => `<p>${escapeHtml(p).replace(/\n/g,'<br>')}</p>`).join('');
+
+// стало:
+const paragraphs = item.body.split('\n\n').map(formatParagraph).join('');
 
       const entry = document.createElement('article');
       entry.className = 'entry';
