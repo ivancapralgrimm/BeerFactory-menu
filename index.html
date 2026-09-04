@@ -1,851 +1,1051 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-  <!-- Универсальные мобильные иконки для BeerFactory -->
-
-<!-- Настройки для iPhone -->
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<meta name="apple-mobile-web-app-title" content="BeerFactory">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-
-<!-- Настройки для Android и других браузеров -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
-
-<!-- Иконка для вкладок браузера на ПК -->
-<link rel="icon" type="image/png" sizes="32x32" href="apple-touch-icon.png">
-<meta charset="UTF-8">
-<!-- viewport — чтобы на телефоне сайт не масштабировался как десктопная версия -->
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>BeerFactory — меню</title>
-<style>
-  /* Подключаем 3 шрифта: Oswald — крупные заголовки/названия,
-     IBM Plex Mono — "чековый"/тикетный текст, Oswald — обычный текст */
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700;900&display=swap');
-
-  /* Цветовая палитра сайта — меняешь цвет тут один раз, применяется везде,
-     где используется var(--имя) */
-  :root{
-    --bg: #17110c;         /* основной тёмный фон страницы */
-    --bg-2: #1f1710;       /* чуть светлее фон — карточки, поле поиска */
-    --paper: #f1e6d2;      /* цвет "бумаги" на обороте карточки (рецепт) */
-    --paper-dim: #e3d3b6;  /* приглушённый вариант бумаги — подзаголовки */
-    --amber: #e8a33d;      /* акцентный янтарный — активные кнопки, теги коктейлей */
-    --copper: #c1652f;     /* акцентный медный — кнопка "Сюрприз" */
-    --olive: #6f7a55;      /* не используется напрямую, запасной акцент */
-    --ink: #241a10;        /* тёмный текст на светлой "бумаге" */
-    --ink-soft: #4a3b28;   /* приглушённый тёмный — пунктирные линии на бумаге */
-    --line: rgba(241,230,210,0.14); /* тонкие разделительные линии на тёмном фоне */
-  }
-
-  /* box-sizing:border-box — padding и border не увеличивают итоговый размер блока,
-     это упрощает вёрстку с фиксированной шириной */
-  * { box-sizing: border-box; }
-
-  body{
-    margin:0;
-    /* лёгкое янтарное свечение по углам фона, поверх основного тёмного цвета */
-    background:
-      radial-gradient(circle at 15% -10%, rgba(232,163,61,0.14), transparent 45%),
-      radial-gradient(circle at 100% 0%, rgba(193,101,47,0.10), transparent 40%),
-      var(--bg);
-    color: var(--paper);
-    font-family: 'Oswald', sans-serif;
-    padding: 0 0 60px;    /* отступ снизу, чтобы последняя карточка не липла к краю */
-    min-height:100vh;     /* фон растягивается на весь экран, даже если контента мало */
-  }
-
-  /* Шапка сайта: название бара + подзаголовок */
-  header{
-    padding: 54px 20px 20px;
-    text-align:center;
-    border-bottom: 1px solid var(--line);
-  }
-  .kicker{
-    /* маленькая строка над заголовком: "@BEERFACTORYbot · справочник" */
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    letter-spacing:0.25em;
-    text-transform:uppercase;
-    color: var(--amber);
-    margin-bottom:8px;
-  }
-  h1{
-    /* крупная надпись BEERFACTORY с янтарным градиентом внутри текста */
-    font-family:'Oswald', sans-serif;
-    font-weight: 900;
-    font-size: 46px;
-    letter-spacing: 0.02em;
-    margin: 0;
-    line-height:0.95;
-    background: linear-gradient(180deg, #f6e6c6, var(--amber));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;   /* сам текст прозрачный, виден только градиент фона */
-  }
-  .sub{
-    /* строка под заголовком: "коктейли & кухня — тапни по карточке" */
-    font-family:'IBM Plex Mono', monospace;
-    font-size:12px;
-    color: var(--paper-dim);
-    opacity:0.7;
-    margin-top:10px;
-  }
-  .training-link{
-    display:inline-block;
-    margin-top:16px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    letter-spacing:0.05em;
-    text-transform:uppercase;
-    color: var(--amber);
-    text-decoration:none;
-    border:1px dashed var(--line);
-    padding:8px 16px;
-    border-radius:3px;
-    transition: border-color .15s ease;
-  }
-  .training-link:hover{ border-color: var(--amber); }
-
-  /* Блок с поиском, вкладками категорий и кнопкой "Сюрприз" */
-  .controls{
-    max-width: 640px;     /* ограничиваем ширину на больших экранах */
-    margin: 22px auto 0;  /* auto по бокам — блок центрируется */
-    padding: 0 16px;
-  }
-
-  /* Верхний ряд: пилюля "Меню" слева + пилюля-лупа справа */
-  .topbar{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }
-
-  .menu-trigger{
-    flex-shrink:0;
-    display:flex; align-items:center; gap:8px;
-    background: var(--bg-2);
-    border: 1px dashed var(--line);
-    border-radius: 999px;
-    padding: 10px 14px;
-    cursor:pointer;
-    font-family:'IBM Plex Mono', monospace;
-    color: var(--paper);
-  }
-  .menu-trigger:hover{ border-color: var(--amber); }
-  .menu-trigger .mt-icon{ font-size:14px; flex-shrink:0; }
-  .menu-trigger .mt-label{
-    font-size:12px; letter-spacing:0.03em; text-transform:uppercase;
-    color: var(--amber); font-weight:600;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    max-width: 34vw;
-  }
-  .menu-trigger .mt-chev{ color: var(--paper-dim); font-size:11px; flex-shrink:0; }
-
-  .search-slot{
-    flex:1;
-    display:flex; justify-content:flex-end; align-items:center;
-    position:relative;
-    min-width:0;
-  }
-  .search-icon-btn{
-    flex-shrink:0;
-    display:flex; align-items:center; gap:6px;
-    height:40px;
-    padding: 0 16px;
-    border-radius:999px;
-    background: var(--bg-2);
-    border: 1px dashed var(--line);
-    color: var(--paper);
-    font-family:'IBM Plex Mono', monospace;
-    font-size:12px;
-    letter-spacing:0.03em;
-    text-transform:uppercase;
-    white-space:nowrap;
-    cursor:pointer;
-  }
-  .search-icon-btn:hover{ border-color: var(--amber); }
-  .search-slot.open .search-icon-btn{ display:none; }
-
-  input[type="text"]{
-    /* поле поиска, стилизованное под "чек" — пунктирная рамка */
-    width:0; min-width:0; opacity:0;
-    padding:0; border:none;
-    background: var(--bg-2);
-    border-radius: 999px;
-    color: var(--paper);
-    font-family:'IBM Plex Mono', monospace;
-    font-size: 16px;
-    outline:none;
-    transition: width .25s ease, opacity .2s ease, padding .25s ease, border-color .15s ease;
-  }
-  .search-slot.open input[type="text"]{
-    width:100%; opacity:1;
-    padding: 11px 16px;
-    border: 1px dashed var(--line);
-  }
-  .search-slot.open input[type="text"]:focus{ border-color: var(--amber); }
-  input[type="text"]::placeholder{ color: rgba(241,230,210,0.35); }
-
-  /* Боковой слайдер с категориями (замена ряда .tabs) */
-  .drawer-overlay{
-    position: fixed; inset:0;
-    background: rgba(0,0,0,0.55);
-    opacity:0; pointer-events:none;
-    transition: opacity .25s ease;
-    z-index: 90;
-  }
-  .drawer-overlay.open{ opacity:1; pointer-events:auto; }
-  .drawer{
-    position: fixed; top:0; left:0; bottom:0;
-    width: min(300px, 82vw);
-    background: var(--bg-2);
-    border-right: 1px solid var(--line);
-    z-index: 91;
-    transform: translateX(-100%);
-    transition: transform .3s cubic-bezier(.4,.1,.2,1);
-    display:flex; flex-direction:column;
-    box-shadow: 10px 0 30px rgba(0,0,0,0.4);
-  }
-  .drawer.open{ transform: translateX(0); }
-  .drawer-head{
-    display:flex; align-items:center; justify-content:space-between;
-    padding: 20px 16px 14px;
-    border-bottom: 1px solid var(--line);
-  }
-  .drawer-head .dh-title{
-    font-family:'Oswald', sans-serif;
-    font-weight:700;
-    font-size:19px;
-    color: var(--paper);
-  }
-  .drawer-close{
-    background:none; border:none;
-    color: var(--paper-dim);
-    font-size:22px; line-height:1;
-    cursor:pointer;
-    padding:4px 8px;
-  }
-  .drawer-close:hover{ color: var(--amber); }
-  .drawer-list{
-    flex:1;
-    overflow-y:auto;
-    padding: 10px 8px;
-    display:flex; flex-direction:column; gap:2px;
-  }
-  .drawer-item{
-    display:flex; align-items:center; gap:10px;
-    width:100%;
-    text-align:left;
-    background:transparent;
-    border:none;
-    border-left: 3px solid transparent;
-    padding: 12px 12px;
-    border-radius: 0 6px 6px 0;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:13px;
-    color: var(--paper-dim);
-    cursor:pointer;
-    transition: all .15s ease;
-  }
-  .drawer-item .di-label{ flex:1; }
-  .drawer-item:hover{ background: rgba(232,163,61,0.07); color: var(--paper); }
-  .drawer-item.active{
-    border-left-color: var(--amber);
-    background: rgba(232,163,61,0.12);
-    color: var(--amber);
-    font-weight:600;
-  }
-
-  /* Строка "62 позиций" + кнопка "Не знаю, что выбрать" */
-  .toolbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:center;
-    margin-top:14px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    color: rgba(241,230,210,0.5);
-  }
-  .surprise-btn{
-    background:transparent;
-    border:1px solid var(--copper);
-    color: var(--copper);
-    padding:7px 12px;
-    border-radius:3px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    cursor:pointer;
-    letter-spacing:0.04em;
-  }
-  .surprise-btn:hover{ background: var(--copper); color: var(--bg); }
-
-  /* Сетка карточек рецептов */
-  .grid{
-    max-width: 640px;
-    margin: 26px auto 0;
-    padding: 0 16px;
-    display:grid;
-    grid-template-columns: 1fr;   /* по умолчанию — одна колонка (телефон) */
-    gap: 16px;
-  }
-  @media (min-width: 560px){
-    /* на экранах шире 560px — две колонки карточек */
-    .grid{ grid-template-columns: 1fr 1fr; }
-  }
-
-  /* === Карточка рецепта (переворачивающаяся плитка) === */
-  .card{
-    perspective: 1200px;   /* создаёт 3D-эффект для переворота дочернего блока */
-    height: 190px;         /* высота карточки в закрытом виде */
-    transition: height .4s ease; /* плавное изменение высоты при перевороте */
-  }
-  .card.flipped{
-    /* когда карточка перевёрнута — высота берётся из --flip-h,
-       это значение JS выставляет индивидуально под каждый рецепт (см. render()) */
-    height: var(--flip-h, 340px);
-  }
-  .card-inner{
-    /* внутренний контейнер, который физически крутится на 180 градусов */
-    position:relative;
-    width:100%; height:100%;
-    transition: transform .5s cubic-bezier(.4,.2,.2,1);
-    transform-style: preserve-3d;  /* обязательно для 3D-переворота */
-  }
-  .card.flipped .card-inner{ transform: rotateY(180deg); }
-
-  .face{
-    /* общие стили для лицевой (.front) и обратной (.back) стороны карточки —
-       обе занимают всю площадь .card-inner и накладываются друг на друга */
-    position:absolute; inset:0;
-    backface-visibility:hidden;    /* скрывает сторону, когда она "повёрнута к нам спиной" */
-    border-radius:6px;
-    padding:16px;
-    overflow:hidden;
-  }
-  .front{
-    /* лицевая сторона: название + теги, тёмный фон */
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    display:flex;
-    flex-direction:column;
-    justify-content:space-between;
-    cursor:pointer;
-  }
-  .front:hover{ border-color: var(--amber); }
-  .front::after{
-    /* декоративная "перфорация" (пунктир из кружочков) снизу лицевой карточки —
-       как отрывной край чека */
-    content:"";
-    position:absolute;
-    left:0; right:0; bottom:0;
-    height:8px;
-    background-image: radial-gradient(circle, var(--bg) 3px, transparent 3.5px);
-    background-size: 14px 14px;
-    background-position: 4px 3px;
-  }
-  .cat-icon{ font-size:19px; opacity:0.85; } /* эмодзи-иконка категории (🍹/🍽/...) */
-  .card-name{
-    /* крупное название рецепта на лицевой стороне */
-    font-family:'Oswald', sans-serif;
-    font-weight: 700;
-    font-size: 22px;
-    letter-spacing:0.005em;
-    line-height:1.1;
-    margin: 10px 0 6px;
-    color: var(--paper);
-  }
-  .tags{
-    /* контейнер тегов — переносятся на новую строку, если не влезают */
-    display:flex; flex-wrap:wrap; gap:5px;
-  }
-  .tag{
-    /* один тег-"бейджик" (например "ягодный") */
-    font-family:'IBM Plex Mono', monospace;
-    font-size:9px;
-    text-transform:uppercase;
-    letter-spacing:0.06em;
-    padding:3px 7px;
-    border-radius:2px;
-    background: rgba(232,163,61,0.12);
-    color: var(--amber);
-    border: 1px solid rgba(232,163,61,0.25);
-  }
-  .back-photo{
-    /* фото рецепта на обороте карточки:
-       фиксированная высота + object-fit:contain — фото всегда видно целиком,
-       без обрезки краёв и без разрастания на весь экран */
-    width:100%;
-    height:150px;
-    object-fit:contain;
-    background: rgba(36,26,16,0.06); /* лёгкий фон под фото, если пропорции не совпадают с рамкой */
-    border-radius:4px;
-    margin-bottom:8px;
-    display:block;
-  }
-  .kitchen .tag{
-    /* у категории "Кухня" теги перекрашены в оливковый — визуально отличать от коктейлей */
-    background: rgba(111,122,85,0.16);
-    color: #b7c396;
-    border-color: rgba(111,122,85,0.35);
-  }
-  .tap-hint{
-    /* мелкая подсказка "тапни для рецепта →" внизу лицевой карточки */
-    font-family:'IBM Plex Mono', monospace;
-    font-size:9px;
-    color: rgba(241,230,210,0.3);
-    letter-spacing:0.05em;
-  }
-
-  .back{
-    /* обратная сторона карточки — светлая "бумага" с рецептом */
-    background: var(--paper);
-    color: var(--ink);
-    transform: rotateY(180deg); /* заранее повёрнута на 180°, чтобы после общего
-                                    переворота .card-inner текст читался нормально */
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11.5px;
-    line-height:1.5;
-    cursor:pointer;
-    overflow-y:auto;    /* если рецепт длиннее карточки — появится вертикальная прокрутка */
-  }
-  .back b{
-    /* заголовки полей на обороте: "Состав", "Метод", "Подача" */
-    display:block;
-    color: var(--copper);
-    font-family:'Oswald', sans-serif;
-    font-size:11px;
-    text-transform:uppercase;
-    letter-spacing:0.08em;
-    margin: 8px 0 2px;
-  }
-  .back b:first-child{ margin-top:0; }
-  .back .ticket-name{
-    /* название рецепта на обороте, повторяется сверху над составом */
-    font-family:'Oswald', sans-serif;
-    font-weight: 700;
-    font-size:17px;
-    color: var(--ink);
-    letter-spacing:0.005em;
-    border-bottom: 1px dashed var(--ink-soft);
-    padding-bottom:6px;
-    margin-bottom:6px;
-  }
-  .ingredient-table{ margin-bottom:2px; } /* обёртка вокруг списка ингредиентов */
-  .ingredient-row{
-    /* одна строка одного ингредиента — с тонким пунктиром снизу, как строка чека */
-    padding: 3px 0;
-    border-bottom: 1px dashed rgba(74,59,40,0.22);
-  }
-  .ingredient-row:last-child{ border-bottom:none; } /* у последней строки линию убираем */
-
-  .empty{
-    /* сообщение "Ничего не нашлось", когда поиск/фильтр не дал результатов */
-    text-align:center;
-    padding: 50px 20px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:13px;
-    color: rgba(241,230,210,0.4);
-  }
-
-  .note{
-    /* сноска внизу страницы про демо-данные / подключение NocoDB */
-    max-width:640px;
-    margin: 34px auto 0;
-    padding: 14px 20px;
-    text-align:center;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:10.5px;
-    line-height:1.6;
-    color: rgba(241,230,210,0.35);
-    border-top: 1px solid var(--line);
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    /* уважаем настройку "уменьшить анимацию" в системе пользователя —
-       отключаем анимацию переворота карточки */
-    .card-inner{ transition:none; }
-  }
-  .to-top{
-  /* плавающая кнопка "наверх" — появляется только после прокрутки вниз */
-  position: fixed;
-  right: 18px;
-  bottom: 22px;
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: var(--amber);
-  color: var(--ink);
-  border: none;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(10px);
-  transition: opacity .25s ease, transform .25s ease;
-  z-index: 50;
-}
-.to-top.visible{
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
-}
-</style>
-</head>
-<body>
-<!-- Кнопка "наверх": JS показывает/скрывает её по прокрутке, см. .to-top в <style> -->
-<button class="to-top" id="toTop" aria-label="Наверх">↑</button>
-<header>
-  <div class="kicker">@BEERFACTORYbot · справочник</div>
-  <h1>BEERFACTORY</h1>
-  <div class="sub">коктейли &amp; кухня — тапни по карточке</div>
-  <a href="training.html" class="training-link">📚 Обучение для персонала</a>
-</header>
-
-<div class="controls">
-  <div class="topbar">
-    <button class="menu-trigger" id="menuBtn">
-      <span class="mt-icon">☰</span>
-      <span class="mt-label" id="menuLabel">Всё меню</span>
-      <span class="mt-chev">▾</span>
-    </button>
-    <div class="search-slot" id="searchSlot">
-      <button class="search-icon-btn" id="searchIconBtn" aria-label="Поиск">🔎 Поиск</button>
-      <!-- id="search" — по этому id JS ловит ввод текста и фильтрует карточки -->
-      <input type="text" id="search" placeholder="найти по названию или тегу...">
-    </div>
-  </div>
-  <div class="toolbar">
-    <span id="count">— позиций</span> <!-- сюда JS подставляет число найденных позиций -->
-    <button class="surprise-btn" id="surprise">🎲 Не знаю, что выбрать</button>
-  </div>
-</div>
-
-<!-- Боковой слайдер с категориями (замена ряда .tabs) -->
-<div class="drawer-overlay" id="drawerOverlay"></div>
-<aside class="drawer" id="drawer">
-  <div class="drawer-head">
-    <span class="dh-title">Категории</span>
-    <button class="drawer-close" id="drawerClose" aria-label="Закрыть">×</button>
-  </div>
-  <!-- id="tabs" — контейнер кнопок категорий; data-cat= передаёт JS,
-       какую категорию показывать при клике на кнопку -->
-  <nav class="drawer-list" id="tabs">
-    <button class="drawer-item active" data-cat="all"><span class="di-label">Всё меню</span></button>
-    <button class="drawer-item" data-cat="Коктейль"><span class="di-label">🍹 Коктейли</span></button>
-    <button class="drawer-item" data-cat="Кухня"><span class="di-label">🍽 Кухня</span></button>
-    <!-- НОВЫЕ КАТЕГОРИИ: значение в data-cat должно ТОЧНО совпадать
-         с текстом в колонке "Категория" в NocoDB -->
-    <button class="drawer-item" data-cat="Заготовка"><span class="di-label">🧂 Заготовки</span></button>
-    <button class="drawer-item" data-cat="Лимонад"><span class="di-label">🍋 Б/А Напитки</span></button>
-    <button class="drawer-item" data-cat="Настойка"><span class="di-label">🥃 Настойка</span></button>
-  </nav>
-</aside>
-
-<!-- id="grid" — пустой контейнер, JS заполняет его карточками при каждом render() -->
-<div class="grid" id="grid"></div>
-<!-- показывается вместо сетки, если под текущий поиск/фильтр ничего не подошло -->
-<div class="empty" id="empty" style="display:none">Ничего не нашлось. Попробуй другое слово.</div>
-
-<div class="note">
-  Сейчас показаны демо-примеры. Чтобы подключить твою реальную таблицу NocoDB
-  (61 коктейль + 99 позиций кухни) — впиши токен в CONFIG в начале &lt;script&gt;
-  и поставь useRemote: true. Подробности в инструкции ниже.
-</div>
-
-<script>
-// ====== ДЕМО-ДАННЫЕ ======
-// Используются только пока useRemote: false (см. CONFIG ниже) или если запрос
-// к NocoDB не удался — чтобы страница не оставалась пустой.
-const ITEMS = [
-  {name:"Яблоко-Саган", cat:"Коктейли", tags:["ягодный","освежающий"], compound:"Джин 40мл · яблочный сок 60мл · сироп саган-дайля 15мл · лайм", method:"Шейк со льдом, двойное процеживание", serving:"Коктейльный бокал, долька яблока"},
-  {name:"Дымная Гавана", cat:"Коктейли", tags:["ромовый","крепкий"], compound:"Тёмный ром 45мл · ананасовый сок 40мл · лайм 15мл · биттер", method:"Билд в стакане на льду, лёгкое копчение веточкой розмарина", serving:"Хайбол, лёд-кубик"},
-  {name:"Полынная Горечь", cat:"Коктейли", tags:["горький","аперитив"], compound:"Джин 35мл · Апероль 25мл · тоник · долька грейпфрута", method:"Билд в бокале со льдом, аккуратно долить тоник", serving:"Бокал для вина, лёд"},
-  {name:"Овсяный Штиль", cat:"Коктейли", tags:["сливочный","без алкоголя"], compound:"Овсяное молоко 100мл · эспрессо 30мл · кленовый сироп 10мл", method:"Взбить шейкером без льда, перелить на лёд", serving:"Рокс, корица сверху"},
-  {name:"Мясная тарелка домашних деликатесов", cat:"Кухня", tags:["мясная","на компанию"], compound:"Хамон, брезаола, суджук, домашняя ветчина, оливки, орехи", method:"Нарезка тонкими слайсами, выложить веером по кругу тарелки", serving:"Деревянная доска, 6 персон, горчица отдельно"},
-  {name:"Сырная тарелка", cat:"Кухня", tags:["сырная","на компанию"], compound:"Дор блю, качотта, пармезан, мёд, грецкий орех, виноград", method:"Разложить по фактуре от мягкого к твёрдому", serving:"Каменная доска, мёд в розетке"},
-  {name:"Брускетта с томатами", cat:"Кухня", tags:["лёгкая","вегетарианская"], compound:"Чиабатта, томаты черри, базилик, чеснок, олив. масло, бальзамик", method:"Обжарить хлеб, натереть чесноком, выложить томатную смесь", serving:"Тарелка, 3 шт, микрозелень"},
-  {name:"Крылья BBQ острые", cat:"Кухня", tags:["острая","горячая"], compound:"Куриные крылья, соус барбекю, чили-хлопья, сельдерей", method:"Маринад 2 часа, жарка во фритюре, глазирование соусом", serving:"Тарелка, соус блю-чиз, стебель сельдерея"},
-];
-
-// ====== ПОДКЛЮЧЕНИЕ К СВОЕЙ БАЗЕ NOCODB ======
-// Заполни и поставь useRemote: true, чтобы сайт брал данные из твоей таблицы
-// вместо демо-примеров выше.
-const CONFIG = {
-  useRemote: true,                                // true — включить реальные данные, false — демо
-  baseUrl: "https://nocodb.puzzlebot.top",         // адрес твоего NocoDB
-  tableId: "mqo5ga1nk6h8lv8",                      // ID таблицы «Меню» (коктейли)
-  kitchenTableId: "mc7m3sa4m2x12dd",       // ID отдельной таблицы с кухней
-  token: "FO6A3bSrEwpApDVOsufZcYS5Si0G9gREHJR2yUF-", // NocoDB → Tokens → Create new token (общий для обеих таблиц, если это один аккаунт)
-  categoryField: "Категория",                      // колонка со значением "Коктейли"/"Кухня"/...
-};
-
-
-// НОВОЕ: иконка для каждой категории на лицевой стороне карточки.
-// Если добавишь ещё одну категорию — впиши сюда её иконку по такому же образцу.
-// Иконка для каждой категории на карточке берётся прямо из кнопки-вкладки —
-// эмодзи прописывается ОДИН раз, в HTML кнопки (например data-cat="Кухня">🍽 Кухня),
-// и больше нигде переписывать его не нужно. Если позже добавишь новую вкладку —
-// просто впиши в неё эмодзи перед названием, карта соберётся сама.
-const CATEGORY_ICONS = {};
-document.querySelectorAll('#tabs .drawer-item[data-cat]').forEach(btn => {
-  const cat = btn.dataset.cat;
-  if (cat === 'all') return; // у вкладки "Всё меню" своей иконки на карточках нет
-  const firstWord = btn.querySelector('.di-label').textContent.trim().split(/\s+/)[0]; // текст кнопки до первого пробела — это эмодзи
-  CATEGORY_ICONS[cat] = firstWord;
-});
-
-// DATA — рабочий массив, который реально показывается на экране.
-// Пока не загрузятся реальные данные, в нём лежат демо-примеры (ITEMS).
-let DATA = ITEMS;
-
-// Загружает строки из таблицы NocoDB через её REST API и превращает их
-// в тот же формат объектов, что и в ITEMS выше, чтобы остальной код
-// не знал разницы между демо-данными и реальными.
-// Достаёт все строки из ОДНОЙ таблицы NocoDB и приводит их к единому формату карточки.
-// forcedCategory — если передан, у всех строк этой таблицы категория ставится
-// принудительно (нужно для отдельной таблицы "Кухня" — там своей колонки
-// "Категория" может и не быть, мы и так знаем, что там всё "Кухня").
-async function fetchTable(tableId, forcedCategory){
-  const url = `${CONFIG.baseUrl}/api/v2/tables/${tableId}/records?limit=1000`;
-  const res = await fetch(url, { headers: { "xc-token": CONFIG.token } });
-  if(!res.ok) throw new Error("NocoDB ответил " + res.status + " для таблицы " + tableId);
-  const json = await res.json();
-  const rows = json.list || [];
-  return rows.map(r => {
-    const cat = forcedCategory || (r[CONFIG.categoryField] || "").trim() || "Коктейли";
-
-    // Если это кухня (forcedCategory === "Кухня") – берём специальные поля
-    let compound, method, serving;
-    if (cat === "Кухня") {
-      compound = r["Состав"] || "—";          // можно оставить, но блок не покажется
-      method = r["Описание"] || "—";          // ← колонка "Описание"
-      serving = r["Граммовка"] || "—";        // ← колонка "Граммовка"
-    } else {
-      compound = r["Состав"] || "—";
-      method = r["Метод"] || r["Приготовление"] || "—";
-      serving = r["Подача"] || r["Вес"] || "—";
-    }
-
-    return {
-      name: r["Название"] || "Без названия",
-      cat: cat,
-      tags: (r["Теги"] || "").split(/\s+/).filter(Boolean),
-      compound: compound,
-      method: method,
-      serving: serving,
-      photo: r["Фото-ссылка"] || null,
-    };
-  });
-}
-
-// Загружает обе таблицы (коктейли + кухня) и склеивает их в один массив DATA.
-// Именно поэтому во вкладке "Всё меню" видны позиции из обеих таблиц сразу —
-// а вкладки "Коктейли"/"Кухня" по-прежнему фильтруют по полю cat, как раньше.
-async function loadData(){
-  if(!CONFIG.useRemote) return; // если выключено — просто оставляем демо-данные
-
-  try{
-    // Promise.all — оба запроса летят параллельно, а не один за другим
-    const [mainItems, kitchenItems] = await Promise.all([
-      fetchTable(CONFIG.tableId, null),               // основная таблица — категория берётся из колонки
-      CONFIG.kitchenTableId
-        ? fetchTable(CONFIG.kitchenTableId, "Кухня")   // вторая таблица — категория всегда "Кухня"
-        : Promise.resolve([]),
-    ]);
-    DATA = [...mainItems, ...kitchenItems]; // склеиваем оба списка в один
-  }catch(e){
-    console.error("Не удалось загрузить NocoDB, показаны демо-данные:", e);
-  }
-}
-
-// state — текущее состояние экрана: какая вкладка выбрана и что введено в поиск.
-// Меняется по кликам/вводу, и по нему render() решает, что показывать.
-let state = { cat: "all", query: "" };
-
-// Проверяет, подходит ли один рецепт под текущий фильтр (категория + поиск)
-function matches(item){
-  if(state.cat !== "all" && item.cat !== state.cat) return false;
-  if(state.query){
-    const q = state.query.toLowerCase();
-    // ищем совпадение и в названии, и в тегах одновременно
-    const hay = (item.name + " " + item.tags.join(" ")).toLowerCase();
-    if(!hay.includes(q)) return false;
-  }
-  return true;
-}
-
-// Список единиц измерения, после которых обычно начинается следующий
-// ингредиент в тексте (используется как запасной вариант разбивки на строки,
-// если в самой ячейке NocoDB нет явных переносов)
-const UNIT_PATTERN = /(\d+(?:[.,]\d+)?\s*(?:мл|гр|г|кг|л|шт|долька|дольки|долек|слайс|слайса|слайсов|лист|листик|листика|листа|стебель|стебля|палочка|палочки|щепотка|щепотки|капля|капли|капель|зубчик|зубчика|зубчиков|пучок|пучка|ч\.л\.|ст\.л\.)\.?)\s+(?=[А-ЯЁ])/g;
-
-// Превращает текст состава в HTML-список строк-ингредиентов ("как таблица").
-// Порядок попыток разбивки:
-//  1) если в ячейке буквально написан текст "\n" — разбить по нему
-//  2) если стоит настоящий перенос строки — разбить по нему
-//  3) иначе — попытаться расставить переносы самим, по единицам измерения
-function ingredientRows(text){
-  let raw = String(text || "—").trim();
-  let lines;
-  if(/\\n/.test(raw)){
-    // в ячейке вручную набран текст "\n" — используем его как разделитель
-    lines = raw.split(/\\n+/);
-  } else if(/\n/.test(raw)){
-    // в ячейке настоящий перенос строки — используем его
-    lines = raw.split(/\n+/);
-  } else {
-    // иначе пытаемся сами расставить переносы по единицам измерения
-    const withBreaks = raw.replace(UNIT_PATTERN, "$1\n");
-    lines = withBreaks.split(/\n+/);
-  }
-  lines = lines.map(s => s.trim()).filter(Boolean);
-  if(lines.length === 0) lines = ["—"]; // на случай полностью пустого состава
-  // каждая строка — отдельный <div>, стилизованный в CSS как строка чека
-  return lines.map(line => `<div class="ingredient-row">${line}</div>`).join("");
-}
-
-// Главная функция отрисовки: перестраивает всю сетку карточек с нуля
-// на основе текущих DATA + state. Вызывается при любом изменении
-// (смена вкладки, ввод в поиск, загрузка новых данных).
-function render(){
-  const grid = document.getElementById("grid");
-  const empty = document.getElementById("empty");
-  const list = DATA.filter(matches); // берём только подходящие под фильтр рецепты
-
-  document.getElementById("count").textContent = list.length + " позиций";
-  grid.innerHTML = ""; // очищаем сетку перед перерисовкой
-  empty.style.display = list.length ? "none" : "block"; // показываем "Ничего не нашлось" при пустом списке
-
-  list.forEach(item => {
-    const isKitchen = item.cat === "Кухня"; // влияет на подписи "Приготовление"/"Вес"
-    const icon = CATEGORY_ICONS[item.cat] || "🍹"; // иконка категории, по умолчанию — коктейльная
-
-    const card = document.createElement("div");
-    card.className = "card";
-    // Собираем HTML одной карточки: лицевая сторона (front) + оборот (back).
-    // ${...} — сюда подставляются реальные данные конкретного рецепта.
-    card.innerHTML = `
-  <div class="card-inner">
-    <div class="face front ${isKitchen ? 'kitchen' : ''}">
-      <div>
-        <div class="cat-icon">${icon}</div>
-        <div class="card-name">${item.name}</div>
-        <div class="tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>
-      </div>
-      <div class="tap-hint">тапни для рецепта →</div>
-    </div>
-    <div class="face back">
-      ${item.photo ? `<img class="back-photo" src="${item.photo}" alt="${item.name}">` : ''}
-      <div class="ticket-name">${item.name}</div>
-      <!-- Блок "Состав" показываем только для НЕ-кухни -->
-      ${!isKitchen ? `<b>Состав</b><div class="ingredient-table">${ingredientRows(item.compound)}</div>` : ''}
-      <b>${isKitchen ? 'Описание' : 'Метод'}</b>${item.method}
-      <b>${isKitchen ? 'Граммовка' : 'Подача'}</b>${item.serving}
-    </div>
-  </div>`;
-
-    const front = card.querySelector(".front");
-    const back = card.querySelector(".back");
-    // клик по лицевой стороне — переворачиваем карточку
-    front.addEventListener("click", () => card.classList.add("flipped"));
-    // клик по обороту — переворачиваем обратно
-    back.addEventListener("click", () => card.classList.remove("flipped"));
-
-    grid.appendChild(card);
-
-    // Растягиваем карточку под реальную высоту содержимого оборота
-    // (фото + текст рецепта), чтобы при перевороте не было ни обрезки,
-    // ни лишнего пустого места. scrollHeight — полная высота содержимого,
-    // даже если оно сейчас визуально не помещается.
-    const naturalHeight = back.scrollHeight + 8;
-    card.style.setProperty("--flip-h", Math.max(naturalHeight, 220) + "px");
-  });
-}
-
-// Боковой слайдер с категориями
-const drawer = document.getElementById("drawer");
-const drawerOverlay = document.getElementById("drawerOverlay");
-const menuLabel = document.getElementById("menuLabel");
-
-function openDrawer(){
-  drawer.classList.add("open");
-  drawerOverlay.classList.add("open");
-  document.body.style.overflow = "hidden";
-}
-function closeDrawer(){
-  drawer.classList.remove("open");
-  drawerOverlay.classList.remove("open");
-  document.body.style.overflow = "";
-}
-document.getElementById("menuBtn").addEventListener("click", openDrawer);
-document.getElementById("drawerClose").addEventListener("click", closeDrawer);
-drawerOverlay.addEventListener("click", closeDrawer);
-
-// Клик по любой кнопке-категории в слайдере: переключаем активную,
-// обновляем label на кнопке "Меню", перерисовываем сетку и закрываем слайдер
-document.getElementById("tabs").addEventListener("click", (e) => {
-  const btn = e.target.closest(".drawer-item");
-  if(!btn) return; // клик мимо кнопки — игнорируем
-  document.querySelectorAll(".drawer-item").forEach(t => t.classList.remove("active"));
-  btn.classList.add("active");
-  state.cat = btn.dataset.cat; // значение из data-cat="..." в HTML кнопки
-  menuLabel.textContent = btn.querySelector(".di-label").textContent;
-  render();
-  closeDrawer();
-});
-
-// Лупа: раскрывает поле поиска до края кнопки "Меню"
-const searchSlot = document.getElementById("searchSlot");
-const searchInput = document.getElementById("search");
-document.getElementById("searchIconBtn").addEventListener("click", () => {
-  searchSlot.classList.add("open");
-  searchInput.focus();
-});
-searchInput.addEventListener("blur", () => {
-  if(!searchInput.value.trim()) searchSlot.classList.remove("open");
-});
-
-// Ввод текста в поле поиска — фильтруем карточки "на лету", без кнопки "Найти"
-document.getElementById("search").addEventListener("input", (e) => {
-  state.query = e.target.value.trim();
-  render();
-});
-
-// Кнопка "🎲 Не знаю, что выбрать": выбираем случайный рецепт из текущей
-// выбранной категории (или из всех, если выбрано "Всё меню"), прокручиваем
-// к нему и автоматически переворачиваем карточку
-document.getElementById("surprise").addEventListener("click", () => {
-  const pool = DATA.filter(i => state.cat === "all" ? true : i.cat === state.cat);
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  document.getElementById("search").value = ""; // сбрасываем поиск, чтобы рецепт точно был виден
-  state.query = "";
-  render();
-  // ищем в уже отрисованной сетке карточку с нужным названием
-  const cards = [...document.querySelectorAll(".card-name")];
-  const target = cards.find(c => c.textContent === pick.name);
-  if(target){
-    const card = target.closest(".card");
-    card.scrollIntoView({behavior:"smooth", block:"center"});
-    // небольшая задержка, чтобы сначала долистать, а потом уже перевернуть карточку
-    setTimeout(() => card.classList.add("flipped"), 350);
-  }
-});
-// Кнопка "наверх": показываем только если прокрутили больше, чем на 1 экран вниз —
-// чтобы не мозолила глаза, пока список короткий или мы уже в начале страницы
-const toTopBtn = document.getElementById("toTop");
-window.addEventListener("scroll", () => {
-  if(window.scrollY > window.innerHeight * 0.6){
-    toTopBtn.classList.add("visible");
-  } else {
-    toTopBtn.classList.remove("visible");
-  }
-});
-toTopBtn.addEventListener("click", () => {
-  window.scrollTo({ top: 0, behavior: "smooth" });
-});
-// Точка входа: сначала грузим данные (демо или NocoDB), затем отрисовываем сетку
-loadData().then(render);
-</script>
-
-</body>
-</html>
+  
+  
+  
+<!DOCTYPE html>  
+<html lang="ru">  
+<head>  
+  <!-- Универсальные мобильные иконки для BeerFactory -->  
+  
+<!-- Настройки для iPhone -->  
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">  
+<meta name="apple-mobile-web-app-title" content="BeerFactory">  
+<meta name="apple-mobile-web-app-capable" content="yes">  
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">  
+  
+<!-- Настройки для Android и других браузеров -->  
+<link rel="manifest" href="manifest.json">  
+<meta name="theme-color" content="#000000">  
+  
+<!-- Иконка для вкладок браузера на ПК -->  
+<link rel="icon" type="image/png" sizes="32x32" href="apple-touch-icon.png">  
+<meta charset="UTF-8">  
+<!-- viewport — чтобы на телефоне сайт не масштабировался как десктопная версия,  
+     и чтобы поле ввода при фокусе не вызывало авто-зум браузера -->  
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">  
+<title>BeerFactory — меню</title>  
+<style>  
+  /* Подключаем 3 шрифта: Oswald — крупные заголовки/названия,  
+     IBM Plex Mono — "чековый"/тикетный текст, Oswald — обычный текст */  
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700;900&display=swap');  
+  
+  /* Цветовая палитра сайта — меняешь цвет тут один раз, применяется везде,  
+     где используется var(--имя) */  
+  :root{  
+    --bg: #17110c;         /* основной тёмный фон страницы */  
+    --bg-2: #1f1710;       /* чуть светлее фон — карточки, поле поиска */  
+    --paper: #f1e6d2;      /* цвет "бумаги" на обороте карточки (рецепт) */  
+    --paper-dim: #e3d3b6;  /* приглушённый вариант бумаги — подзаголовки */  
+    --amber: #e8a33d;      /* акцентный янтарный — активные кнопки, теги коктейлей */  
+    --copper: #c1652f;     /* акцентный медный — кнопка "Сюрприз" */  
+    --olive: #6f7a55;      /* не используется напрямую, запасной акцент */  
+    --ink: #241a10;        /* тёмный текст на светлой "бумаге" */  
+    --ink-soft: #4a3b28;   /* приглушённый тёмный — пунктирные линии на бумаге */  
+    --line: rgba(241,230,210,0.14); /* тонкие разделительные линии на тёмном фоне */  
+  }  
+  
+  /* box-sizing:border-box — padding и border не увеличивают итоговый размер блока,  
+     это упрощает вёрстку с фиксированной шириной */  
+  * { box-sizing: border-box; }  
+  
+  /* === ПРЕДОТВРАЩЕНИЕ АВТО-ЗУМА ПРИ ОТКРЫТИИ КЛАВИАТУРЫ (iOS/Android) ===  
+     html/body фиксируются на весь экран через dvh (динамическая высота  
+     viewport, учитывает появление/исчезновение клавиатуры и адресной строки),  
+     внутренний скролл переносится на body. Это вместе с minimum-scale=1.0  
+     в meta viewport выше устраняет проблему авто-увеличения страницы  
+     при фокусе на инпуте (#search, .portion-input). */  
+  html, body{  
+    height: 100%;  
+    height: 100dvh;  
+  }  
+  html{  
+    overflow: hidden;  
+  }  
+  
+  body{  
+    margin:0;  
+    /* лёгкое янтарное свечение по углам фона, поверх основного тёмного цвета */  
+    background:  
+      radial-gradient(circle at 15% -10%, rgba(232,163,61,0.14), transparent 45%),  
+      radial-gradient(circle at 100% 0%, rgba(193,101,47,0.10), transparent 40%),  
+      var(--bg);  
+    color: var(--paper);  
+    font-family: 'Oswald', sans-serif;  
+    padding: 0 0 60px;    /* отступ снизу, чтобы последняя карточка не липла к краю */  
+    min-height:100%;  
+    overflow-y: auto;     /* скролл всей страницы теперь на body, а не на html */  
+    overflow-x: hidden;  
+    -webkit-overflow-scrolling: touch;  
+  }  
+  
+  /* Шапка сайта: название бара + подзаголовок */  
+  header{  
+    padding: 54px 20px 20px;  
+    text-align:center;  
+    border-bottom: 1px solid var(--line);  
+  }  
+  .kicker{  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:11px;  
+    letter-spacing:0.25em;  
+    text-transform:uppercase;  
+    color: var(--amber);  
+    margin-bottom:8px;  
+  }  
+  h1{  
+    font-family:'Oswald', sans-serif;  
+    font-weight: 900;  
+    font-size: 46px;  
+    letter-spacing: 0.02em;  
+    margin: 0;  
+    line-height:0.95;  
+    background: linear-gradient(180deg, #f6e6c6, var(--amber));  
+    -webkit-background-clip: text;  
+    background-clip: text;  
+    color: transparent;  
+  }  
+  .sub{  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:12px;  
+    color: var(--paper-dim);  
+    opacity:0.7;  
+    margin-top:10px;  
+  }  
+  .training-link{  
+    display:inline-block;  
+    margin-top:16px;  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:11px;  
+    letter-spacing:0.05em;  
+    text-transform:uppercase;  
+    color: var(--amber);  
+    text-decoration:none;  
+    border:1px dashed var(--line);  
+    padding:8px 16px;  
+    border-radius:3px;  
+    transition: border-color .15s ease;  
+  }  
+  .training-link:hover{ border-color: var(--amber); }  
+  
+  .controls{  
+    max-width: 640px;  
+    margin: 22px auto 0;  
+    padding: 0 16px;  
+  }  
+  
+  .topbar{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }  
+  
+  .menu-trigger{  
+    flex-shrink:0;  
+    display:flex; align-items:center; gap:8px;  
+    background: var(--bg-2);  
+    border: 1px dashed var(--line);  
+    border-radius: 999px;  
+    padding: 10px 14px;  
+    cursor:pointer;  
+    font-family:'IBM Plex Mono', monospace;  
+    color: var(--paper);  
+  }  
+  .menu-trigger:hover{ border-color: var(--amber); }  
+  .menu-trigger .mt-icon{ font-size:14px; flex-shrink:0; }  
+  .menu-trigger .mt-label{  
+    font-size:12px; letter-spacing:0.03em; text-transform:uppercase;  
+    color: var(--amber); font-weight:600;  
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;  
+    max-width: 34vw;  
+  }  
+  .menu-trigger .mt-chev{ color: var(--paper-dim); font-size:11px; flex-shrink:0; }  
+  
+  .search-slot{  
+    flex:1;  
+    display:flex; justify-content:flex-end; align-items:center;  
+    position:relative;  
+    min-width:0;  
+  }  
+  .search-icon-btn{  
+    flex-shrink:0;  
+    display:flex; align-items:center; gap:6px;  
+    height:40px;  
+    padding: 0 16px;  
+    border-radius:999px;  
+    background: var(--bg-2);  
+    border: 1px dashed var(--line);  
+    color: var(--paper);  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:12px;  
+    letter-spacing:0.03em;  
+    text-transform:uppercase;  
+    white-space:nowrap;  
+    cursor:pointer;  
+  }  
+  .search-icon-btn:hover{ border-color: var(--amber); }  
+  .search-slot.open .search-icon-btn{ display:none; }  
+  
+  input[type="text"]{  
+    /* font-size держим не меньше 16px — часть защиты от авто-зума на iOS  
+       (Safari зумит страницу при фокусе на инпуте с шрифтом < 16px) */  
+    width:0; min-width:0; opacity:0;  
+    padding:0; border:none;  
+    background: var(--bg-2);  
+    border-radius: 999px;  
+    color: var(--paper);  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size: 16px;  
+    outline:none;  
+    transition: width .25s ease, opacity .2s ease, padding .25s ease, border-color .15s ease;  
+  }  
+  .search-slot.open input[type="text"]{  
+    width:100%; opacity:1;  
+    padding: 11px 16px;  
+    border: 1px dashed var(--line);  
+  }  
+  .search-slot.open input[type="text"]:focus{ border-color: var(--amber); }  
+  input[type="text"]::placeholder{ color: rgba(241,230,210,0.35); }  
+  
+  .drawer-overlay{  
+    position: fixed; inset:0;  
+    background: rgba(0,0,0,0.55);  
+    opacity:0; pointer-events:none;  
+    transition: opacity .25s ease;  
+    z-index: 90;  
+  }  
+  .drawer-overlay.open{ opacity:1; pointer-events:auto; }  
+  .drawer{  
+    position: fixed; top:0; left:0; bottom:0;  
+    width: min(300px, 82vw);  
+    background: var(--bg-2);  
+    border-right: 1px solid var(--line);  
+    z-index: 91;  
+    transform: translateX(-100%);  
+    transition: transform .3s cubic-bezier(.4,.1,.2,1);  
+    display:flex; flex-direction:column;  
+    box-shadow: 10px 0 30px rgba(0,0,0,0.4);  
+  }  
+  .drawer.open{ transform: translateX(0); }  
+  .drawer-head{  
+    display:flex; align-items:center; justify-content:space-between;  
+    padding: 20px 16px 14px;  
+    border-bottom: 1px solid var(--line);  
+  }  
+  .drawer-head .dh-title{  
+    font-family:'Oswald', sans-serif;  
+    font-weight:700;  
+    font-size:19px;  
+    color: var(--paper);  
+  }  
+  .drawer-close{  
+    background:none; border:none;  
+    color: var(--paper-dim);  
+    font-size:22px; line-height:1;  
+    cursor:pointer;  
+    padding:4px 8px;  
+  }  
+  .drawer-close:hover{ color: var(--amber); }  
+  .drawer-list{  
+    flex:1;  
+    overflow-y:auto;  
+    padding: 10px 8px;  
+    display:flex; flex-direction:column; gap:2px;  
+  }  
+  .drawer-item{  
+    display:flex; align-items:center; gap:10px;  
+    width:100%;  
+    text-align:left;  
+    background:transparent;  
+    border:none;  
+    border-left: 3px solid transparent;  
+    padding: 12px 12px;  
+    border-radius: 0 6px 6px 0;  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:13px;  
+    color: var(--paper-dim);  
+    cursor:pointer;  
+    transition: all .15s ease;  
+  }  
+  .drawer-item .di-label{ flex:1; }  
+  .drawer-item:hover{ background: rgba(232,163,61,0.07); color: var(--paper); }  
+  .drawer-item.active{  
+    border-left-color: var(--amber);  
+    background: rgba(232,163,61,0.12);  
+    color: var(--amber);  
+    font-weight:600;  
+  }  
+  
+  .toolbar{  
+    display:flex;  
+    justify-content:space-between;  
+    align-items:center;  
+    margin-top:14px;  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:11px;  
+    color: rgba(241,230,210,0.5);  
+  }  
+  .surprise-btn{  
+    background:transparent;  
+    border:1px solid var(--copper);  
+    color: var(--copper);  
+    padding:7px 12px;  
+    border-radius:3px;  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:11px;  
+    cursor:pointer;  
+    letter-spacing:0.04em;  
+  }  
+  .surprise-btn:hover{ background: var(--copper); color: var(--bg); }  
+  
+  .grid{  
+    max-width: 640px;  
+    margin: 26px auto 0;  
+    padding: 0 16px;  
+    display:grid;  
+    grid-template-columns: 1fr;  
+    gap: 16px;  
+  }  
+  @media (min-width: 560px){  
+    .grid{ grid-template-columns: 1fr 1fr; }  
+  }  
+  
+  .card{  
+    perspective: 1200px;  
+    height: 190px;  
+    transition: height .4s ease;  
+  }  
+  .card.flipped{  
+    height: var(--flip-h, 340px);  
+  }  
+  .card-inner{  
+    position:relative;  
+    width:100%; height:100%;  
+    transition: transform .5s cubic-bezier(.4,.2,.2,1);  
+    transform-style: preserve-3d;  
+  }  
+  .card.flipped .card-inner{ transform: rotateY(180deg); }  
+  
+  .face{  
+    position:absolute; inset:0;  
+    backface-visibility:hidden;  
+    border-radius:6px;  
+    padding:16px;  
+    overflow:hidden;  
+  }  
+  .front{  
+    background: var(--bg-2);  
+    border: 1px solid var(--line);  
+    display:flex;  
+    flex-direction:column;  
+    justify-content:space-between;  
+    cursor:pointer;  
+  }  
+  .front:hover{ border-color: var(--amber); }  
+  .front::after{  
+    content:"";  
+    position:absolute;  
+    left:0; right:0; bottom:0;  
+    height:8px;  
+    background-image: radial-gradient(circle, var(--bg) 3px, transparent 3.5px);  
+    background-size: 14px 14px;  
+    background-position: 4px 3px;  
+  }  
+  .cat-icon{ font-size:19px; opacity:0.85; }  
+  .card-name{  
+    font-family:'Oswald', sans-serif;  
+    font-weight: 700;  
+    font-size: 22px;  
+    letter-spacing:0.005em;  
+    line-height:1.1;  
+    margin: 10px 0 6px;  
+    color: var(--paper);  
+  }  
+  .tags{  
+    display:flex; flex-wrap:wrap; gap:5px;  
+  }  
+  .tag{  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:9px;  
+    text-transform:uppercase;  
+    letter-spacing:0.06em;  
+    padding:3px 7px;  
+    border-radius:2px;  
+    background: rgba(232,163,61,0.12);  
+    color: var(--amber);  
+    border: 1px solid rgba(232,163,61,0.25);  
+  }  
+  .back-photo{  
+    /* cursor:zoom-in — подсказка, что фото кликабельно и открывает лайтбокс */  
+    width:100%;  
+    height:150px;  
+    object-fit:contain;  
+    background: rgba(36,26,16,0.06);  
+    border-radius:4px;  
+    margin-bottom:8px;  
+    display:block;  
+    cursor: zoom-in;  
+  }  
+  .kitchen .tag{  
+    background: rgba(111,122,85,0.16);  
+    color: #b7c396;  
+    border-color: rgba(111,122,85,0.35);  
+  }  
+  .tap-hint{  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:9px;  
+    color: rgba(241,230,210,0.3);  
+    letter-spacing:0.05em;  
+  }  
+  
+  .back{  
+    background: var(--paper);  
+    color: var(--ink);  
+    transform: rotateY(180deg);  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:11.5px;  
+    line-height:1.5;  
+    cursor:pointer;  
+    overflow-y:auto;  
+  }  
+  .back b{  
+    display:block;  
+    color: var(--copper);  
+    font-family:'Oswald', sans-serif;  
+    font-size:11px;  
+    text-transform:uppercase;  
+    letter-spacing:0.08em;  
+    margin: 8px 0 2px;  
+  }  
+  .back b:first-child{ margin-top:0; }  
+  .back .ticket-name{  
+    font-family:'Oswald', sans-serif;  
+    font-weight: 700;  
+    font-size:17px;  
+    color: var(--ink);  
+    letter-spacing:0.005em;  
+    border-bottom: 1px dashed var(--ink-soft);  
+    padding-bottom:6px;  
+    margin-bottom:6px;  
+  }  
+  .ingredient-table{ margin-bottom:2px; }  
+  .ingredient-row{  
+    padding: 3px 0;  
+    border-bottom: 1px dashed rgba(74,59,40,0.22);  
+  }  
+  .ingredient-row:last-child{ border-bottom:none; }  
+  
+  /* === СТИЛИ ДЛЯ КАЛЬКУЛЯТОРА ПОРЦИЙ (только категория "Настойка") === */  
+  .portion-calculator{  
+    margin: 12px 0;  
+  }  
+  .portion-calculator .calc-header{  
+    padding: 10px;  
+    background: rgba(193,101,47,0.1);  
+    border-radius: 4px;  
+    margin-bottom: 8px;  
+  }  
+  .portion-calculator .calc-label{  
+    display: block;  
+    font-size: 11px;  
+    text-transform: uppercase;  
+    letter-spacing: 0.05em;  
+    color: var(--copper);  
+    margin-bottom: 8px;  
+    font-weight: 600;  
+  }  
+  .portion-calculator .calc-input-wrap{  
+    display: flex;  
+    gap: 8px;  
+    align-items: center;  
+  }  
+  .portion-calculator .portion-input{  
+    /* font-size 16px — важно для iOS, иначе Safari зумит страницу при фокусе */  
+    width: 80px;  
+    padding: 6px 8px;  
+    border: 1px dashed var(--ink-soft);  
+    border-radius: 3px;  
+    background: rgba(241,230,210,0.5);  
+    color: var(--ink);  
+    font-family: 'IBM Plex Mono', monospace;  
+    font-size: 16px;  
+  }  
+  .portion-calculator .portion-input:focus{  
+    outline: none;  
+    border-color: var(--copper);  
+  }  
+  .portion-calculator .calc-unit{  
+    font-size: 10px;  
+    color: rgba(74,59,40,0.6);  
+  }  
+  .scaled-recipe{  
+    margin-top: 10px;  
+    padding: 8px;  
+    background: rgba(193,101,47,0.06);  
+    border-left: 2px solid var(--copper);  
+    border-radius: 2px;  
+    font-size: 10.5px;  
+    line-height: 1.6;  
+    color: var(--ink);  
+  }  
+  .scaled-recipe strong{  
+    display: block;  
+    color: var(--copper);  
+    font-family: 'Oswald', sans-serif;  
+    font-size: 10px;  
+    text-transform: uppercase;  
+    letter-spacing: 0.05em;  
+    margin-bottom: 4px;  
+  }  
+  .scaled-recipe .scaled-row{ padding: 1px 0; }  
+  .scaled-recipe .scaled-empty{  
+    opacity: 0.6;  
+    font-style: italic;  
+  }  
+  
+  .empty{  
+    text-align:center;  
+    padding: 50px 20px;  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:13px;  
+    color: rgba(241,230,210,0.4);  
+  }  
+  
+  .note{  
+    max-width:640px;  
+    margin: 34px auto 0;  
+    padding: 14px 20px;  
+    text-align:center;  
+    font-family:'IBM Plex Mono', monospace;  
+    font-size:10.5px;  
+    line-height:1.6;  
+    color: rgba(241,230,210,0.35);  
+    border-top: 1px solid var(--line);  
+  }  
+  
+  @media (prefers-reduced-motion: reduce){  
+    .card-inner{ transition:none; }  
+  }  
+  .to-top{  
+  position: fixed;  
+  right: 18px;  
+  bottom: 22px;  
+  width: 46px;  
+  height: 46px;  
+  border-radius: 50%;  
+  background: var(--amber);  
+  color: var(--ink);  
+  border: none;  
+  font-size: 20px;  
+  line-height: 1;  
+  cursor: pointer;  
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);  
+  opacity: 0;  
+  pointer-events: none;  
+  transform: translateY(10px);  
+  transition: opacity .25s ease, transform .25s ease;  
+  z-index: 50;  
+}  
+.to-top.visible{  
+  opacity: 1;  
+  pointer-events: auto;  
+  transform: translateY(0);  
+}  
+  
+/* === ЛАЙТБОКС ДЛЯ ФОТО (увеличение по клику, с затемнением фона) ===  
+   z-index: 200 — выше drawer (91) и принтера чека (6), гарантированно  
+   перекрывает любой другой слой интерфейса. */  
+.lightbox-overlay{  
+  position: fixed;  
+  inset: 0;  
+  background: rgba(0,0,0,0.92);  
+  z-index: 200;  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+  padding: 20px;  
+  opacity: 0;  
+  pointer-events: none;  
+  transition: opacity .25s ease;  
+}  
+.lightbox-overlay.open{  
+  opacity: 1;  
+  pointer-events: auto;  
+}  
+.lightbox-img{  
+  max-width: 100%;  
+  max-height: 100%;  
+  object-fit: contain;  
+  border-radius: 6px;  
+  box-shadow: 0 10px 40px rgba(0,0,0,0.6);  
+  transform: scale(0.92);  
+  transition: transform .25s ease;  
+}  
+.lightbox-overlay.open .lightbox-img{  
+  transform: scale(1);  
+}  
+.lightbox-close{  
+  position: absolute;  
+  top: 18px;  
+  right: 18px;  
+  width: 40px;  
+  height: 40px;  
+  border-radius: 50%;  
+  background: var(--bg-2);  
+  border: 1px solid var(--line);  
+  color: var(--paper);  
+  font-size: 20px;  
+  line-height: 1;  
+  cursor: pointer;  
+  display: flex;  
+  align-items: center;  
+  justify-content: center;  
+}  
+.lightbox-close:hover{ border-color: var(--amber); color: var(--amber); }  
+</style>  
+</head>  
+<body>  
+<button class="to-top" id="toTop" aria-label="Наверх">↑</button>  
+<header>  
+  <div class="kicker">@BEERFACTORYbot · справочник</div>  
+  <h1>BEERFACTORY</h1>  
+  <div class="sub">коктейли &amp; кухня — тапни по карточке</div>  
+  <a href="training.html" class="training-link">📚 Обучение для персонала</a>  
+</header>  
+  
+<div class="controls">  
+  <div class="topbar">  
+    <button class="menu-trigger" id="menuBtn">  
+      <span class="mt-icon">☰</span>  
+      <span class="mt-label" id="menuLabel">Всё меню</span>  
+      <span class="mt-chev">▾</span>  
+    </button>  
+    <div class="search-slot" id="searchSlot">  
+      <button class="search-icon-btn" id="searchIconBtn" aria-label="Поиск">🔎 Поиск</button>  
+      <input type="text" id="search" placeholder="найти по названию или тегу...">  
+    </div>  
+  </div>  
+  <div class="toolbar">  
+    <span id="count">— позиций</span>  
+    <button class="surprise-btn" id="surprise">🎲 Не знаю, что выбрать</button>  
+  </div>  
+</div>  
+  
+<div class="drawer-overlay" id="drawerOverlay"></div>  
+<aside class="drawer" id="drawer">  
+  <div class="drawer-head">  
+    <span class="dh-title">Категории</span>  
+    <button class="drawer-close" id="drawerClose" aria-label="Закрыть">×</button>  
+  </div>  
+  <nav class="drawer-list" id="tabs">  
+    <button class="drawer-item active" data-cat="all"><span class="di-label">Всё меню</span></button>  
+    <button class="drawer-item" data-cat="Коктейль"><span class="di-label">🍹 Коктейли</span></button>  
+    <button class="drawer-item" data-cat="Кухня"><span class="di-label">🍽 Кухня</span></button>  
+    <button class="drawer-item" data-cat="Заготовка"><span class="di-label">🧂 Заготовки</span></button>  
+    <button class="drawer-item" data-cat="Лимонад"><span class="di-label">🍋 Б/А Напитки</span></button>  
+    <button class="drawer-item" data-cat="Настойка"><span class="di-label">🥃 Настойка</span></button>  
+  </nav>  
+</aside>  
+  
+<div class="grid" id="grid"></div>  
+<div class="empty" id="empty" style="display:none">Ничего не нашлось. Попробуй другое слово.</div>  
+  
+<div class="note">  
+  Сейчас показаны демо-примеры. Чтобы подключить твою реальную таблицу NocoDB  
+  (61 коктейль + 99 позиций кухни) — впиши токен в CONFIG в начале &lt;script&gt;  
+  и поставь useRemote: true. Подробности в инструкции ниже.  
+</div>  
+  
+<div class="lightbox-overlay" id="lightboxOverlay">  
+  <button class="lightbox-close" id="lightboxClose" aria-label="Закрыть">×</button>  
+  <img class="lightbox-img" id="lightboxImg" src="" alt="">  
+</div>  
+  
+<script>  
+// ====== ДЕМО-ДАННЫЕ ======  
+const ITEMS = [  
+  {name:"Яблоко-Саган", cat:"Коктейли", tags:["ягодный","освежающий"], compound:"Джин 40мл · яблочный сок 60мл · сироп саган-дайля 15мл · лайм", method:"Шейк со льдом, двойное процеживание", serving:"Коктейльный бокал, долька яблока"},  
+  {name:"Дымная Гавана", cat:"Коктейли", tags:["ромовый","крепкий"], compound:"Тёмный ром 45мл · ананасовый сок 40мл · лайм 15мл · биттер", method:"Билд в стакане на льду, лёгкое копчение веточкой розмарина", serving:"Хайбол, лёд-кубик"},  
+  {name:"Полынная Горечь", cat:"Коктейли", tags:["горький","аперитив"], compound:"Джин 35мл · Апероль 25мл · тоник · долька грейпфрута", method:"Билд в бокале со льдом, аккуратно долить тоник", serving:"Бокал для вина, лёд"},  
+  {name:"Овсяный Штиль", cat:"Коктейли", tags:["сливочный","без алкоголя"], compound:"Овсяное молоко 100мл · эспрессо 30мл · кленовый сироп 10мл", method:"Взбить шейкером без льда, перелить на лёд", serving:"Рокс, корица сверху"},  
+  {name:"Мясная тарелка домашних деликатесов", cat:"Кухня", tags:["мясная","на компанию"], compound:"Хамон, брезаола, суджук, домашняя ветчина, оливки, орехи", method:"Нарезка тонкими слайсами, выложить веером по кругу тарелки", serving:"Деревянная доска, 6 персон, горчица отдельно"},  
+  {name:"Сырная тарелка", cat:"Кухня", tags:["сырная","на компанию"], compound:"Дор блю, качотта, пармезан, мёд, грецкий орех, виноград", method:"Разложить по фактуре от мягкого к твёрдому", serving:"Каменная доска, мёд в розетке"},  
+  {name:"Брускетта с томатами", cat:"Кухня", tags:["лёгкая","вегетарианская"], compound:"Чиабатта, томаты черри, базилик, чеснок, олив. масло, бальзамик", method:"Обжарить хлеб, натереть чесноком, выложить томатную смесь", serving:"Тарелка, 3 шт, микрозелень"},  
+  {name:"Крылья BBQ острые", cat:"Кухня", tags:["острая","горячая"], compound:"Куриные крылья, соус барбекю, чили-хлопья, сельдерей", method:"Маринад 2 часа, жарка во фритюре, глазирование соусом", serving:"Тарелка, соус блю-чиз, стебель сельдерея"},  
+  {name:"Настойка «Перцовая»", cat:"Настойка", tags:["острая","крепкая"], compound:"Водка \"Русский стандарт\" 1л\nПерец Болгарский 80гр\nПерец Чили 40гр\nПерец Горошек 15гр\nСахарный Сироп 150мл", method:"Настаивать в тёмном месте 10-14 дней, ежедневно встряхивать, процедить через марлю", serving:"Рюмка, охлаждённая"},  
+  {name:"Настойка апельсиновая", cat:"Настойка", tags:["цитрусовая","крепкая"], compound:"Светлый ром 750мл\nАпельсины 2 шт\nВанилин 1г\nМёд 50мл", method:"Нарезать апельсины кольцами, положить в банку с ромом, добавить ванилин и мёд, закрыть, настаивать 21 день", serving:"Рюмка, льдинка"},  
+];  
+  
+// ====== ПОДКЛЮЧЕНИЕ К СВОЕЙ БАЗЕ NOCODB ======  
+const CONFIG = {  
+  useRemote: true,  
+  baseUrl: "https://nocodb.puzzlebot.top",  
+  tableId: "mqo5ga1nk6h8lv8",  
+  kitchenTableId: "mc7m3sa4m2x12dd",  
+  token: "FO6A3bSrEwpApDVOsufZcYS5Si0G9gREHJR2yUF-",  
+  categoryField: "Категория",  
+};  
+  
+const CATEGORY_ICONS = {};  
+document.querySelectorAll('#tabs .drawer-item[data-cat]').forEach(btn => {  
+  const cat = btn.dataset.cat;  
+  if (cat === 'all') return;  
+  const firstWord = btn.querySelector('.di-label').textContent.trim().split(/\s+/)[0];  
+  CATEGORY_ICONS[cat] = firstWord;  
+});  
+  
+let DATA = ITEMS;  
+  
+async function fetchTable(tableId, forcedCategory){  
+  const url = `${CONFIG.baseUrl}/api/v2/tables/${tableId}/records?limit=1000`;  
+  const res = await fetch(url, { headers: { "xc-token": CONFIG.token } });  
+  if(!res.ok) throw new Error("NocoDB ответил " + res.status + " для таблицы " + tableId);  
+  const json = await res.json();  
+  const rows = json.list || [];  
+  return rows.map(r => {  
+    const cat = forcedCategory || (r[CONFIG.categoryField] || "").trim() || "Коктейли";  
+    let compound, method, serving;  
+    if (cat === "Кухня") {  
+      compound = r["Состав"] || "—";  
+      method = r["Описание"] || "—";  
+      serving = r["Граммовка"] || "—";  
+    } else {  
+      compound = r["Состав"] || "—";  
+      method = r["Метод"] || r["Приготовление"] || "—";  
+      serving = r["Подача"] || r["Вес"] || "—";  
+    }  
+    return {  
+      name: r["Название"] || "Без названия",  
+      cat: cat,  
+      tags: (r["Теги"] || "").split(/\s+/).filter(Boolean),  
+      compound: compound,  
+      method: method,  
+      serving: serving,  
+      photo: r["Фото-ссылка"] || null,  
+    };  
+  });  
+}  
+  
+async function loadData(){  
+  if(!CONFIG.useRemote) return;  
+  try{  
+    const [mainItems, kitchenItems] = await Promise.all([  
+      fetchTable(CONFIG.tableId, null),  
+      CONFIG.kitchenTableId  
+        ? fetchTable(CONFIG.kitchenTableId, "Кухня")  
+        : Promise.resolve([]),  
+    ]);  
+    DATA = [...mainItems, ...kitchenItems];  
+  }catch(e){  
+    console.error("Не удалось загрузить NocoDB, показаны демо-данные:", e);  
+  }  
+}  
+  
+let state = { cat: "all", query: "" };  
+  
+function matches(item){  
+  if(state.cat !== "all" && item.cat !== state.cat) return false;  
+  if(state.query){  
+    const q = state.query.toLowerCase();  
+    const hay = (item.name + " " + item.tags.join(" ")).toLowerCase();  
+    if(!hay.includes(q)) return false;  
+  }  
+  return true;  
+}  
+  
+const UNIT_PATTERN = /(\d+(?:[.,]\d+)?\s*(?:мл|гр|г|кг|л|шт|порц\.?|долька|дольки|долек|слайс|слайса|слайсов|лист|листик|листика|листа|стебель|стебля|палочка|палочки|щепотка|щепотки|капля|капли|капель|зубчик|зубчика|зубчиков|пучок|пучка|ч\.л\.|ст\.л\.)\.?)\s+(?=[А-ЯЁ])/g;  
+  
+function ingredientRows(text){  
+  let raw = String(text || "—").trim();  
+  let lines;  
+  if(/\\n/.test(raw)){  
+    lines = raw.split(/\\n+/);  
+  } else if(/\n/.test(raw)){  
+    lines = raw.split(/\n+/);  
+  } else {  
+    const withBreaks = raw.replace(UNIT_PATTERN, "$1\n");  
+    lines = withBreaks.split(/\n+/);  
+  }  
+  lines = lines.map(s => s.trim()).filter(Boolean);  
+  if(lines.length === 0) lines = ["—"];  
+  return lines.map(line => `<div class="ingredient-row">${line}</div>`).join("");  
+}  
+  
+// ========== КАЛЬКУЛЯТОР ПОРЦИЙ ДЛЯ НАСТОЕК ==========  
+  
+// Разбивает состав на отдельные строки-ингредиенты — та же логика приоритета,  
+// что и в ingredientRows(): сначала экранированный \n, потом настоящий \n,  
+// потом "·" (демо-данные), и только в последнюю очередь — авто-расстановка  
+// переносов по единицам измерения.  
+function splitCompoundToLines(text){  
+  let raw = String(text || "").trim();  
+  let lines;  
+  if(/\\n/.test(raw)){  
+    lines = raw.split(/\\n+/);  
+  } else if(/\n/.test(raw)){  
+    lines = raw.split(/\n+/);  
+  } else if(/·/.test(raw)){  
+    lines = raw.split(/·/);  
+  } else {  
+    const withBreaks = raw.replace(UNIT_PATTERN, "$1\n");  
+    lines = withBreaks.split(/\n+/);  
+  }  
+  return lines.map(s => s.trim()).filter(Boolean);  
+}  
+  
+// ИСПРАВЛЕНО: название ингредиента теперь ".+?" (любые символы, нежадно) —  
+// раньше было "[А-Яа-яЁёA-Za-z\s\-]+?", которое НЕ пропускало кавычки,  
+// скобки и т.п., поэтому строка вида  
+//   Водка "Русский стандарт" 1л  
+// не находила совпадения (кавычки внутри названия) и попадала в разряд  
+// "нераспознано", то есть не масштабировалась. Число+единица по-прежнему  
+// ищутся строго в конце строки.  
+const INGREDIENT_RE = /^(.+?)\s+(\d+(?:[.,]\d+)?)\s*(мл|гр|г|кг|л|шт|порц|долька|дольки|долек|слайс|слайса|слайсов|лист|листик|листика|листа|стебель|стебля|палочка|палочки|щепотка|щепотки|капля|капли|капель|зубчик|зубчика|зубчиков|пучок|пучка|ч\.л\.|ст\.л\.)?\.?$/;  
+  
+/**  
+ * Парсит текст состава в массив ингредиентов с числами.  
+ * Строки без явного числа в конце (например "тоник — по вкусу") возвращаются  
+ * как есть, с number=null — не масштабируются, но выводятся без изменений.  
+ */  
+function parseIngredients(text){  
+  const lines = splitCompoundToLines(text);  
+  return lines.map(line => {  
+    const match = line.match(INGREDIENT_RE);  
+    if(!match){  
+      return { original: line, ingredient: line, number: null, unit: "" };  
+    }  
+    return {  
+      original: line,  
+      ingredient: match[1].trim(),  
+      number: parseFloat(match[2].replace(",", ".")),  
+      unit: match[3] || "",  
+    };  
+  });  
+}  
+  
+// Форматирует число после умножения: целые — без дробной части,  
+// дробные — до 2 знаков после запятой, без хвостовых нулей.  
+function formatScaledNumber(num){  
+  const rounded = Math.round(num * 100) / 100;  
+  return String(rounded);  
+}  
+  
+/**  
+ * Масштабирует рецепт на множитель и возвращает массив строк для отображения.  
+ */  
+function scaleRecipe(text, multiplier){  
+  const ingredients = parseIngredients(text);  
+  return ingredients.map(ing => {  
+    if(ing.number === null){  
+      return ing.original;  
+    }  
+    const scaled = formatScaledNumber(ing.number * multiplier);  
+    return `${ing.ingredient} ${scaled}${ing.unit ? " " + ing.unit : ""}`;  
+  });  
+}  
+  
+/**  
+ * Создаёт HTML калькулятора порций для настойки. Исходный состав в  
+ * пересчёт передаётся через замыкание в render() (не через data-атрибут),  
+ * поэтому кавычки/спецсимволы в тексте состава не ломают HTML-разметку.  
+ */  
+function createPortionCalculator(itemName){  
+  const safeId = "calc-" + itemName.replace(/[^a-zA-Zа-яА-Я0-9]+/g, "-").toLowerCase();  
+  return `  
+    <div class="portion-calculator">  
+      <div class="calc-header">  
+        <label class="calc-label" for="${safeId}">Рассчитать на N порций</label>  
+        <div class="calc-input-wrap">  
+          <input  
+            type="number"  
+            id="${safeId}"  
+            class="portion-input"  
+            value="1"  
+            min="0.5"  
+            step="0.5"  
+            inputmode="decimal"  
+          >  
+          <span class="calc-unit">порций (можно дробное, напр. 3.5)</span>  
+        </div>  
+      </div>  
+      <div class="scaled-recipe"></div>  
+    </div>  
+  `;  
+}  
+  
+// ========== ЛАЙТБОКС: УВЕЛИЧЕНИЕ ФОТО ПО КЛИКУ ==========  
+const lightboxOverlay = document.getElementById("lightboxOverlay");  
+const lightboxImg = document.getElementById("lightboxImg");  
+const lightboxClose = document.getElementById("lightboxClose");  
+  
+function openLightbox(src, alt){  
+  lightboxImg.src = src;  
+  lightboxImg.alt = alt || "";  
+  lightboxOverlay.classList.add("open");  
+  document.body.style.overflow = "hidden";  
+}  
+function closeLightbox(){  
+  lightboxOverlay.classList.remove("open");  
+  document.body.style.overflow = "";  
+  lightboxImg.src = "";  
+}  
+lightboxClose.addEventListener("click", closeLightbox);  
+lightboxOverlay.addEventListener("click", (e) => {  
+  if(e.target === lightboxOverlay) closeLightbox();  
+});  
+document.addEventListener("keydown", (e) => {  
+  if(e.key === "Escape" && lightboxOverlay.classList.contains("open")) closeLightbox();  
+});  
+  
+function render(){  
+  const grid = document.getElementById("grid");  
+  const empty = document.getElementById("empty");  
+  const list = DATA.filter(matches);  
+  
+  document.getElementById("count").textContent = list.length + " позиций";  
+  grid.innerHTML = "";  
+  empty.style.display = list.length ? "none" : "block";  
+  
+  list.forEach(item => {  
+    const isKitchen = item.cat === "Кухня";  
+    const isRecipe = item.cat === "Настойка";  
+    const icon = CATEGORY_ICONS[item.cat] || "🍹";  
+  
+    const card = document.createElement("div");  
+    card.className = "card";  
+    card.innerHTML = `  
+  <div class="card-inner">  
+    <div class="face front ${isKitchen ? 'kitchen' : ''}">  
+      <div>  
+        <div class="cat-icon">${icon}</div>  
+        <div class="card-name">${item.name}</div>  
+        <div class="tags">${item.tags.map(t=>`<span class="tag">${t}</span>`).join("")}</div>  
+      </div>  
+      <div class="tap-hint">тапни для рецепта →</div>  
+    </div>  
+    <div class="face back">  
+      ${item.photo ? `<img class="back-photo" src="${item.photo}" alt="${item.name}">` : ''}  
+      <div class="ticket-name">${item.name}</div>  
+      ${!isKitchen ? `<b>Состав</b><div class="ingredient-table">${ingredientRows(item.compound)}</div>` : ''}  
+      ${isRecipe ? createPortionCalculator(item.name) : ''}  
+      <b>${isKitchen ? 'Описание' : 'Метод'}</b>${item.method}  
+      <b>${isKitchen ? 'Граммовка' : 'Подача'}</b>${item.serving}  
+    </div>  
+  </div>`;  
+  
+    const front = card.querySelector(".front");  
+    const back = card.querySelector(".back");  
+    front.addEventListener("click", () => card.classList.add("flipped"));  
+    back.addEventListener("click", () => card.classList.remove("flipped"));  
+  
+    grid.appendChild(card);  
+  
+    // Фото на обороте: клик открывает лайтбокс, не переворачивая карточку обратно  
+    const photoImg = back.querySelector(".back-photo");  
+    if(photoImg){  
+      photoImg.addEventListener("click", (e) => {  
+        e.stopPropagation();  
+        openLightbox(photoImg.src, photoImg.alt);  
+      });  
+    }  
+  
+    // Калькулятор порций (только для Настойки)  
+    if(isRecipe){  
+      const portionInput = back.querySelector(".portion-input");  
+      const scaledDiv = back.querySelector(".scaled-recipe");  
+      const originalCompound = item.compound; // берём из замыкания, не из data-атрибута  
+  
+      function updateScaledRecipe(){  
+        const raw = parseFloat(portionInput.value);  
+        const multiplier = (!isNaN(raw) && raw > 0) ? raw : 1;  
+        const rows = scaleRecipe(originalCompound, multiplier);  
+        const rowsHtml = rows.length  
+          ? rows.map(r => `<div class="scaled-row">• ${r}</div>`).join("")  
+          : `<div class="scaled-empty">Не удалось разобрать состав на ингредиенты.</div>`;  
+        scaledDiv.innerHTML = `<strong>На ${multiplier} порций</strong>` + rowsHtml;  
+      }  
+  
+      portionInput.addEventListener("input", updateScaledRecipe);  
+      portionInput.addEventListener("change", updateScaledRecipe);  
+      portionInput.addEventListener("click", (e) => e.stopPropagation());  
+  
+      updateScaledRecipe();  
+    }  
+  
+    const naturalHeight = back.scrollHeight + 8;  
+    card.style.setProperty("--flip-h", Math.max(naturalHeight, 220) + "px");  
+  });  
+}  
+  
+const drawer = document.getElementById("drawer");  
+const drawerOverlay = document.getElementById("drawerOverlay");  
+const menuLabel = document.getElementById("menuLabel");  
+  
+function openDrawer(){  
+  drawer.classList.add("open");  
+  drawerOverlay.classList.add("open");  
+  document.body.style.overflow = "hidden";  
+}  
+function closeDrawer(){  
+  drawer.classList.remove("open");  
+  drawerOverlay.classList.remove("open");  
+  document.body.style.overflow = "";  
+}  
+document.getElementById("menuBtn").addEventListener("click", openDrawer);  
+document.getElementById("drawerClose").addEventListener("click", closeDrawer);  
+drawerOverlay.addEventListener("click", closeDrawer);  
+  
+document.getElementById("tabs").addEventListener("click", (e) => {  
+  const btn = e.target.closest(".drawer-item");  
+  if(!btn) return;  
+  document.querySelectorAll(".drawer-item").forEach(t => t.classList.remove("active"));  
+  btn.classList.add("active");  
+  state.cat = btn.dataset.cat;  
+  menuLabel.textContent = btn.querySelector(".di-label").textContent;  
+  render();  
+  closeDrawer();  
+});  
+  
+const searchSlot = document.getElementById("searchSlot");  
+const searchInput = document.getElementById("search");  
+document.getElementById("searchIconBtn").addEventListener("click", () => {  
+  searchSlot.classList.add("open");  
+  searchInput.focus();  
+});  
+searchInput.addEventListener("blur", () => {  
+  if(!searchInput.value.trim()) searchSlot.classList.remove("open");  
+});  
+  
+document.getElementById("search").addEventListener("input", (e) => {  
+  state.query = e.target.value.trim();  
+  render();  
+});  
+  
+document.getElementById("surprise").addEventListener("click", () => {  
+  const pool = DATA.filter(i => state.cat === "all" ? true : i.cat === state.cat);  
+  const pick = pool[Math.floor(Math.random() * pool.length)];  
+  document.getElementById("search").value = "";  
+  state.query = "";  
+  render();  
+  const cards = [...document.querySelectorAll(".card-name")];  
+  const target = cards.find(c => c.textContent === pick.name);  
+  if(target){  
+    const card = target.closest(".card");  
+    card.scrollIntoView({behavior:"smooth", block:"center"});  
+    setTimeout(() => card.classList.add("flipped"), 350);  
+  }  
+});  
+  
+// Кнопка "наверх": скролл теперь на body (см. html{overflow:hidden} выше),  
+// поэтому слушаем scroll на body, а не на window  
+const toTopBtn = document.getElementById("toTop");  
+document.body.addEventListener("scroll", () => {  
+  if(document.body.scrollTop > window.innerHeight * 0.6){  
+    toTopBtn.classList.add("visible");  
+  } else {  
+    toTopBtn.classList.remove("visible");  
+  }  
+});  
+toTopBtn.addEventListener("click", () => {  
+  document.body.scrollTo({ top: 0, behavior: "smooth" });  
+});  
+  
+loadData().then(render);  
+</script>  
+  
+</body>  
+</html  
