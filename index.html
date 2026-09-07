@@ -1,4 +1,4 @@
-  <!DOCTYPE html>  
+<!DOCTYPE html>  
 <html lang="ru">  
 <head>  
   <!-- Универсальные мобильные иконки для BeerFactory -->  
@@ -11,7 +11,7 @@
   
 <!-- Настройки для Android и других браузеров -->  
 <link rel="manifest" href="manifest.json">  
-<meta name="theme-color" content="#000000">  
+<meta name="theme-color" content="#17120e">  
   
 <!-- Иконка для вкладок браузера на ПК -->  
 <link rel="icon" type="image/png" sizes="32x32" href="apple-touch-icon.png">  
@@ -21,578 +21,638 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">  
 <title>BeerFactory — меню</title>  
 <style>  
-  /* Подключаем 3 шрифта: Oswald — крупные заголовки/названия,  
-     IBM Plex Mono — "чековый"/тикетный текст, Oswald — обычный текст */  
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700;900&display=swap');  
-  
-  /* Цветовая палитра сайта — меняешь цвет тут один раз, применяется везде,  
-     где используется var(--имя) */  
-  :root{  
-    --bg: #17110c;         /* основной тёмный фон страницы */  
-    --bg-2: #1f1710;       /* чуть светлее фон — карточки, поле поиска */  
-    --paper: #f1e6d2;      /* цвет "бумаги" на обороте карточки (рецепт) */  
-    --paper-dim: #e3d3b6;  /* приглушённый вариант бумаги — подзаголовки */  
-    --amber: #e8a33d;      /* акцентный янтарный — активные кнопки, теги коктейлей */  
-    --copper: #c1652f;     /* акцентный медный — кнопка "Сюрприз" */  
-    --olive: #6f7a55;      /* не используется напрямую, запасной акцент */  
-    --ink: #241a10;        /* тёмный текст на светлой "бумаге" */  
-    --ink-soft: #4a3b28;   /* приглушённый тёмный — пунктирные линии на бумаге */  
-    --line: rgba(241,230,210,0.14); /* тонкие разделительные линии на тёмном фоне */  
+  :root {  
+    --bg-main: #17120e;  
+    --bg-card: rgba(38, 28, 20, 0.9);  
+    --accent-amber: #f5a623;  
+    --accent-amber-glow: rgba(245, 166, 35, 0.25);  
+    --accent-green: #34c759;  
+    --accent-red: #ff3b30;  
+    --text-primary: #f5f5f7;  
+    --text-secondary: #a1a1a6;  
+    --border-subtle: rgba(245, 166, 35, 0.15);  
+    --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);  
   }  
-  
-  /* box-sizing:border-box — padding и border не увеличивают итоговый размер блока,  
-     это упрощает вёрстку с фиксированной шириной */  
-  * { box-sizing: border-box; }  
-  
-  /* === ПРЕДОТВРАЩЕНИЕ АВТО-ЗУМА ПРИ ОТКРЫТИИ КЛАВИАТУРЫ (iOS/Android) ===  
-     html/body фиксируются на весь экран через dvh (динамическая высота  
-     viewport, учитывает появление/исчезновение клавиатуры и адресной строки),  
-     внутренний скролл переносится на body. Это вместе с minimum-scale=1.0  
-     в meta viewport выше устраняет проблему авто-увеличения страницы  
-     при фокусе на инпуте (#search, .portion-input). */  
-  html, body{  
+
+  * { 
+    box-sizing: border-box; 
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }  
+
+  html, body {  
     height: 100%;  
     height: 100dvh;  
   }  
-  html{  
+  html {  
     overflow: hidden;  
   }  
   
-  body{  
-    margin:0;  
-    /* лёгкое янтарное свечение по углам фона, поверх основного тёмного цвета */  
-    background:  
-      radial-gradient(circle at 15% -10%, rgba(232,163,61,0.14), transparent 45%),  
-      radial-gradient(circle at 100% 0%, rgba(193,101,47,0.10), transparent 40%),  
-      var(--bg);  
-    color: var(--paper);  
-    font-family: 'Oswald', sans-serif;  
-    padding: 0 0 60px;    /* отступ снизу, чтобы последняя карточка не липла к краю */  
-    min-height:100%;  
-    overflow-y: auto;     /* скролл всей страницы теперь на body, а не на html */  
+  body {  
+    margin: 0;  
+    background-color: var(--bg-main);
+    background-image: 
+      radial-gradient(circle at 50% 0%, var(--accent-amber-glow), transparent 60%),
+      radial-gradient(circle at 80% 100%, rgba(245, 166, 35, 0.08), transparent 50%);
+    color: var(--text-primary);  
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+    padding: 0 0 60px;  
+    min-height: 100%;  
+    overflow-y: auto;  
     overflow-x: hidden;  
     -webkit-overflow-scrolling: touch;  
   }  
-  
-  /* Шапка сайта: название бара + подзаголовок */  
-  header{  
-    padding: 54px 20px 20px;  
-    text-align:center;  
-    border-bottom: 1px solid var(--line);  
+
+  /* Header */
+  header {  
+    padding: 50px 20px 24px;  
+    text-align: center;  
+    border-bottom: 1px solid var(--border-subtle);  
+    background: rgba(23, 18, 14, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }  
-  .kicker{  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:11px;  
-    letter-spacing:0.25em;  
-    text-transform:uppercase;  
-    color: var(--amber);  
-    margin-bottom:8px;  
+  .kicker {  
+    font-size: 12px;  
+    font-weight: 600;
+    letter-spacing: 0.05em;  
+    text-transform: uppercase;  
+    color: var(--accent-amber);  
+    margin-bottom: 8px;  
   }  
-  h1{  
-    font-family:'Oswald', sans-serif;  
-    font-weight: 900;  
-    font-size: 46px;  
-    letter-spacing: 0.02em;  
+  h1 {  
+    font-size: 42px;  
+    font-weight: 700;
+    letter-spacing: -0.01em;  
     margin: 0;  
-    line-height:0.95;  
-    background: linear-gradient(180deg, #f6e6c6, var(--amber));  
-    -webkit-background-clip: text;  
-    background-clip: text;  
-    color: transparent;  
+    line-height: 1.05;  
+    color: var(--text-primary);
   }  
-  .sub{  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:12px;  
-    color: var(--paper-dim);  
-    opacity:0.7;  
-    margin-top:10px;  
+  .sub {  
+    font-size: 13px;  
+    color: var(--text-secondary);  
+    margin-top: 8px;  
   }  
-  .training-link{  
-    display:inline-block;  
-    margin-top:16px;  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:11px;  
-    letter-spacing:0.05em;  
-    text-transform:uppercase;  
-    color: var(--amber);  
-    text-decoration:none;  
-    border:1px dashed var(--line);  
-    padding:8px 16px;  
-    border-radius:3px;  
-    transition: border-color .15s ease;  
+  .training-link {  
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 18px;  
+    font-size: 12px;  
+    font-weight: 600;
+    letter-spacing: 0.02em;  
+    color: var(--accent-amber);  
+    text-decoration: none;  
+    background: rgba(245, 166, 35, 0.08);
+    border: 1px solid var(--border-subtle);  
+    padding: 8px 18px;  
+    border-radius: 980px;  
+    transition: opacity 0.2s var(--apple-ease), transform 0.1s var(--apple-ease), border-color 0.2s var(--apple-ease);
   }  
-  .training-link:hover{ border-color: var(--amber); }  
-  
-  .controls{  
+  .training-link:hover { 
+    border-color: var(--accent-amber); 
+    background: rgba(245, 166, 35, 0.15);
+  }  
+  .training-link:active {
+    transform: scale(0.98);
+  }
+
+  /* Controls & Search */
+  .controls {  
     max-width: 640px;  
-    margin: 22px auto 0;  
+    margin: 24px auto 0;  
     padding: 0 16px;  
   }  
-  
-  .topbar{ display:flex; align-items:center; gap:10px; margin-bottom:14px; }  
-  
-  .menu-trigger{  
-    flex-shrink:0;  
-    display:flex; align-items:center; gap:8px;  
-    background: var(--bg-2);  
-    border: 1px dashed var(--line);  
-    border-radius: 999px;  
-    padding: 10px 14px;  
-    cursor:pointer;  
-    font-family:'IBM Plex Mono', monospace;  
-    color: var(--paper);  
+
+  .topbar { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    margin-bottom: 14px; 
   }  
-  .menu-trigger:hover{ border-color: var(--amber); }  
-  .menu-trigger .mt-icon{ font-size:14px; flex-shrink:0; }  
-  .menu-trigger .mt-label{  
-    font-size:12px; letter-spacing:0.03em; text-transform:uppercase;  
-    color: var(--amber); font-weight:600;  
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;  
+
+  .menu-trigger {  
+    flex-shrink: 0;  
+    display: flex; 
+    align-items: center; 
+    gap: 8px;  
+    background: rgba(255, 255, 255, 0.08);  
+    border: 1px solid rgba(255, 255, 255, 0.1);  
+    border-radius: 980px;  
+    padding: 10px 18px;  
+    cursor: pointer;  
+    color: var(--text-primary);  
+    transition: opacity 0.2s var(--apple-ease), transform 0.1s var(--apple-ease), background 0.2s var(--apple-ease);
+  }  
+  .menu-trigger:hover { 
+    background: rgba(255, 255, 255, 0.12);
+  }  
+  .menu-trigger:active {
+    transform: scale(0.98);
+  }
+  .menu-trigger .mt-icon { font-size: 14px; flex-shrink: 0; color: var(--accent-amber); }  
+  .menu-trigger .mt-label {  
+    font-size: 12px; 
+    font-weight: 600;
+    letter-spacing: 0.05em; 
+    text-transform: uppercase;  
+    color: var(--accent-amber);  
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;  
     max-width: 34vw;  
   }  
-  .menu-trigger .mt-chev{ color: var(--paper-dim); font-size:11px; flex-shrink:0; }  
-  
-  .search-slot{  
-    flex:1;  
-    display:flex; justify-content:flex-end; align-items:center;  
-    position:relative;  
-    min-width:0;  
+  .menu-trigger .mt-chev { color: var(--text-secondary); font-size: 11px; flex-shrink: 0; }  
+
+  .search-slot {  
+    flex: 1;  
+    display: flex; 
+    justify-content: flex-end; 
+    align-items: center;  
+    position: relative;  
+    min-width: 0;  
   }  
-  .search-icon-btn{  
-    flex-shrink:0;  
-    display:flex; align-items:center; gap:6px;  
-    height:40px;  
-    padding: 0 16px;  
-    border-radius:999px;  
-    background: var(--bg-2);  
-    border: 1px dashed var(--line);  
-    color: var(--paper);  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:12px;  
-    letter-spacing:0.03em;  
-    text-transform:uppercase;  
-    white-space:nowrap;  
-    cursor:pointer;  
+  .search-icon-btn {  
+    flex-shrink: 0;  
+    display: flex; 
+    align-items: center; 
+    gap: 6px;  
+    height: 40px;  
+    padding: 0 18px;  
+    border-radius: 980px;  
+    background: rgba(255, 255, 255, 0.08);  
+    border: 1px solid rgba(255, 255, 255, 0.1);  
+    color: var(--text-primary);  
+    font-size: 12px;  
+    font-weight: 600;
+    letter-spacing: 0.05em;  
+    text-transform: uppercase;  
+    white-space: nowrap;  
+    cursor: pointer;  
+    transition: opacity 0.2s var(--apple-ease), transform 0.1s var(--apple-ease), background 0.2s var(--apple-ease);
   }  
-  .search-icon-btn:hover{ border-color: var(--amber); }  
-  .search-slot.open .search-icon-btn{ display:none; }  
-  
-  input[type="text"]{  
-    /* font-size держим не меньше 16px — часть защиты от авто-зума на iOS  
-       (Safari зумит страницу при фокусе на инпуте с шрифтом < 16px) */  
-    width:0; min-width:0; opacity:0;  
-    padding:0; border:none;  
-    background: var(--bg-2);  
-    border-radius: 999px;  
-    color: var(--paper);  
-    font-family:'IBM Plex Mono', monospace;  
+  .search-icon-btn:hover { background: rgba(255, 255, 255, 0.12); }  
+  .search-icon-btn:active { transform: scale(0.98); }
+  .search-slot.open .search-icon-btn { display: none; }  
+
+  input[type="text"] {  
+    width: 0; 
+    min-width: 0; 
+    opacity: 0;  
+    padding: 0; 
+    border: none;  
+    background: rgba(255, 255, 255, 0.08);  
+    border-radius: 980px;  
+    color: var(--text-primary);  
+    font-family: inherit;
     font-size: 16px;  
-    outline:none;  
-    transition: width .25s ease, opacity .2s ease, padding .25s ease, border-color .15s ease;  
+    outline: none;  
+    transition: width 0.3s var(--apple-ease), opacity 0.2s var(--apple-ease), padding 0.3s var(--apple-ease), border-color 0.2s var(--apple-ease);  
   }  
-  .search-slot.open input[type="text"]{  
-    width:100%; opacity:1;  
-    padding: 11px 16px;  
-    border: 1px dashed var(--line);  
+  .search-slot.open input[type="text"] {  
+    width: 100%; 
+    opacity: 1;  
+    padding: 10px 18px;  
+    border: 1px solid var(--border-subtle);  
   }  
-  .search-slot.open input[type="text"]:focus{ border-color: var(--amber); }  
-  input[type="text"]::placeholder{ color: rgba(241,230,210,0.35); }  
-  
-  .drawer-overlay{  
-    position: fixed; inset:0;  
-    background: rgba(0,0,0,0.55);  
-    opacity:0; pointer-events:none;  
-    transition: opacity .25s ease;  
+  .search-slot.open input[type="text"]:focus { border-color: var(--accent-amber); }  
+  input[type="text"]::placeholder { color: var(--text-secondary); }  
+
+  /* Drawer Navigation */
+  .drawer-overlay {  
+    position: fixed; 
+    inset: 0;  
+    background: rgba(0, 0, 0, 0.7);  
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0; 
+    pointer-events: none;  
+    transition: opacity 0.3s var(--apple-ease);  
     z-index: 90;  
   }  
-  .drawer-overlay.open{ opacity:1; pointer-events:auto; }  
-  .drawer{  
-    position: fixed; top:0; left:0; bottom:0;  
-    width: min(300px, 82vw);  
-    background: var(--bg-2);  
-    border-right: 1px solid var(--line);  
+  .drawer-overlay.open { opacity: 1; pointer-events: auto; }  
+
+  .drawer {  
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    bottom: 0;  
+    width: min(320px, 85vw);  
+    background: var(--bg-card);  
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border-subtle);  
     z-index: 91;  
     transform: translateX(-100%);  
-    transition: transform .3s cubic-bezier(.4,.1,.2,1);  
-    display:flex; flex-direction:column;  
-    box-shadow: 10px 0 30px rgba(0,0,0,0.4);  
+    transition: transform 0.4s var(--apple-ease);  
+    display: flex; 
+    flex-direction: column;  
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);  
   }  
-  .drawer.open{ transform: translateX(0); }  
-  .drawer-head{  
-    display:flex; align-items:center; justify-content:space-between;  
-    padding: 20px 16px 14px;  
-    border-bottom: 1px solid var(--line);  
-  }  
-  .drawer-head .dh-title{  
-    font-family:'Oswald', sans-serif;  
-    font-weight:700;  
-    font-size:19px;  
-    color: var(--paper);  
-  }  
-  .drawer-close{  
-    background:none; border:none;  
-    color: var(--paper-dim);  
-    font-size:22px; line-height:1;  
-    cursor:pointer;  
-    padding:4px 8px;  
-  }  
-  .drawer-close:hover{ color: var(--amber); }  
-  .drawer-list{  
-    flex:1;  
-    overflow-y:auto;  
-    padding: 10px 8px;  
-    display:flex; flex-direction:column; gap:2px;  
-  }  
-  .drawer-item{  
-    display:flex; align-items:center; gap:10px;  
-    width:100%;  
-    text-align:left;  
-    background:transparent;  
-    border:none;  
-    border-left: 3px solid transparent;  
-    padding: 12px 12px;  
-    border-radius: 0 6px 6px 0;  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:13px;  
-    color: var(--paper-dim);  
-    cursor:pointer;  
-    transition: all .15s ease;  
-  }  
-  .drawer-item .di-label{ flex:1; }  
-  .drawer-item:hover{ background: rgba(232,163,61,0.07); color: var(--paper); }  
-  .drawer-item.active{  
-    border-left-color: var(--amber);  
-    background: rgba(232,163,61,0.12);  
-    color: var(--amber);  
-    font-weight:600;  
-  }  
+  .drawer.open { transform: translateX(0); }  
   
-  .toolbar{  
-    display:flex;  
-    justify-content:space-between;  
-    align-items:center;  
-    margin-top:14px;  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:11px;  
-    color: rgba(241,230,210,0.5);  
+  .drawer-head {  
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;  
+    padding: 24px 20px 16px;  
+    border-bottom: 1px solid var(--border-subtle);  
   }  
-  .surprise-btn{  
-    background:transparent;  
-    border:1px solid var(--copper);  
-    color: var(--copper);  
-    padding:7px 12px;  
-    border-radius:3px;  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:11px;  
-    cursor:pointer;  
-    letter-spacing:0.04em;  
+  .drawer-head .dh-title {  
+    font-size: 20px;  
+    font-weight: 700;  
+    letter-spacing: -0.01em;
+    color: var(--text-primary);  
   }  
-  .surprise-btn:hover{ background: var(--copper); color: var(--bg); }  
-  
-  .grid{  
+  .drawer-close {  
+    background: rgba(255, 255, 255, 0.08); 
+    border: none;  
+    color: var(--text-secondary);  
+    font-size: 20px; 
+    line-height: 1;  
+    cursor: pointer;  
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s var(--apple-ease), background 0.2s var(--apple-ease);
+  }  
+  .drawer-close:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.15); }  
+
+  .drawer-list {  
+    flex: 1;  
+    overflow-y: auto;  
+    padding: 12px 10px;  
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px;  
+  }  
+  .drawer-item {  
+    display: flex; 
+    align-items: center; 
+    gap: 12px;  
+    width: 100%;  
+    text-align: left;  
+    background: transparent;  
+    border: none;  
+    padding: 12px 16px;  
+    border-radius: 12px;  
+    font-size: 14px;  
+    color: var(--text-secondary);  
+    cursor: pointer;  
+    transition: background 0.2s var(--apple-ease), color 0.2s var(--apple-ease), transform 0.1s var(--apple-ease);  
+  }  
+  .drawer-item .di-label { flex: 1; }  
+  .drawer-item:hover { background: rgba(245, 166, 35, 0.08); color: var(--text-primary); }  
+  .drawer-item:active { transform: scale(0.98); }
+  .drawer-item.active {  
+    background: rgba(245, 166, 35, 0.15);  
+    color: var(--accent-amber);  
+    font-weight: 600;  
+  }  
+
+  .toolbar {  
+    display: flex;  
+    justify-content: space-between;  
+    align-items: center;  
+    margin-top: 16px;  
+    font-size: 12px;  
+    color: var(--text-secondary);  
+  }  
+
+  .surprise-btn {  
+    background: rgba(255, 255, 255, 0.08);  
+    border: 1px solid rgba(255, 255, 255, 0.1);  
+    color: var(--text-primary);  
+    padding: 8px 16px;  
+    border-radius: 980px;  
+    font-size: 12px;  
+    font-weight: 500;
+    cursor: pointer;  
+    transition: opacity 0.2s var(--apple-ease), transform 0.1s var(--apple-ease), border-color 0.2s var(--apple-ease), background 0.2s var(--apple-ease);
+  }  
+  .surprise-btn:hover { 
+    border-color: var(--accent-amber); 
+    background: rgba(245, 166, 35, 0.1);
+    color: var(--accent-amber);
+  }  
+  .surprise-btn:active { transform: scale(0.98); }
+
+  /* Grid & Cards System */
+  .grid {  
     max-width: 640px;  
-    margin: 26px auto 0;  
+    margin: 24px auto 0;  
     padding: 0 16px;  
-    display:grid;  
+    display: grid;  
     grid-template-columns: 1fr;  
     gap: 16px;  
   }  
   @media (min-width: 560px){  
-    .grid{ grid-template-columns: 1fr 1fr; }  
+    .grid { grid-template-columns: 1fr 1fr; }  
   }  
-  
-  .card{  
+
+  .card {  
     perspective: 1200px;  
-    height: 190px;  
-    transition: height .4s ease;  
+    height: 200px;  
+    transition: height 0.4s var(--apple-ease);  
   }  
-  .card.flipped{  
+  .card.flipped {  
     height: var(--flip-h, 340px);  
   }  
-  .card-inner{  
-    position:relative;  
-    width:100%; height:100%;  
-    transition: transform .5s cubic-bezier(.4,.2,.2,1);  
+  .card-inner {  
+    position: relative;  
+    width: 100%; 
+    height: 100%;  
+    transition: transform 0.6s var(--apple-ease);  
     transform-style: preserve-3d;  
   }  
-  .card.flipped .card-inner{ transform: rotateY(180deg); }  
+  .card.flipped .card-inner { transform: rotateY(180deg); }  
+
+  .face {  
+    position: absolute; 
+    inset: 0;  
+    backface-visibility: hidden;  
+    border-radius: 20px;  
+    padding: 20px;  
+    overflow: hidden;  
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  }  
+
+  .front {  
+    display: flex;  
+    flex-direction: column;  
+    justify-content: space-between;  
+    cursor: pointer;  
+    transition: border-color 0.2s var(--apple-ease), transform 0.2s var(--apple-ease);
+  }  
+  .front:hover { 
+    border-color: var(--accent-amber); 
+  }  
+  .cat-icon { font-size: 22px; opacity: 0.9; margin-bottom: 4px; }  
   
-  .face{  
-    position:absolute; inset:0;  
-    backface-visibility:hidden;  
-    border-radius:6px;  
-    padding:16px;  
-    overflow:hidden;  
-  }  
-  .front{  
-    background: var(--bg-2);  
-    border: 1px solid var(--line);  
-    display:flex;  
-    flex-direction:column;  
-    justify-content:space-between;  
-    cursor:pointer;  
-  }  
-  .front:hover{ border-color: var(--amber); }  
-  .front::after{  
-    content:"";  
-    position:absolute;  
-    left:0; right:0; bottom:0;  
-    height:8px;  
-    background-image: radial-gradient(circle, var(--bg) 3px, transparent 3.5px);  
-    background-size: 14px 14px;  
-    background-position: 4px 3px;  
-  }  
-  .cat-icon{ font-size:19px; opacity:0.85; }  
-  .card-name{  
-    font-family:'Oswald', sans-serif;  
+  .card-name {  
+    font-size: 20px;  
     font-weight: 700;  
-    font-size: 22px;  
-    letter-spacing:0.005em;  
-    line-height:1.1;  
-    margin: 10px 0 6px;  
-    color: var(--paper);  
+    letter-spacing: -0.01em;  
+    line-height: 1.25;  
+    margin: 6px 0 10px;  
+    color: var(--text-primary);  
   }  
-  .tags{  
-    display:flex; flex-wrap:wrap; gap:5px;  
+  .tags {  
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: 6px;  
   }  
-  .tag{  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:9px;  
-    text-transform:uppercase;  
-    letter-spacing:0.06em;  
-    padding:3px 7px;  
-    border-radius:2px;  
-    background: rgba(232,163,61,0.12);  
-    color: var(--amber);  
-    border: 1px solid rgba(232,163,61,0.25);  
+  .tag {  
+    font-size: 11px;  
+    font-weight: 600;  
+    text-transform: uppercase;  
+    letter-spacing: 0.05em;  
+    padding: 4px 8px;  
+    border-radius: 6px;  
+    background: rgba(245, 166, 35, 0.12);  
+    color: var(--accent-amber);  
+    border: 1px solid rgba(245, 166, 35, 0.2);  
   }  
-  .back-photo{  
-    /* cursor:zoom-in — подсказка, что фото кликабельно и открывает лайтбокс */  
-    width:100%;  
-    height:150px;  
-    object-fit:contain;  
-    background: rgba(36,26,16,0.06);  
-    border-radius:4px;  
-    margin-bottom:8px;  
-    display:block;  
-    cursor: zoom-in;  
+
+  .kitchen .tag {  
+    background: rgba(52, 199, 89, 0.12);  
+    color: var(--accent-green);  
+    border-color: rgba(52, 199, 89, 0.2);  
   }  
-  .kitchen .tag{  
-    background: rgba(111,122,85,0.16);  
-    color: #b7c396;  
-    border-color: rgba(111,122,85,0.35);  
+
+  .tap-hint {  
+    font-size: 11px;  
+    color: var(--text-secondary);  
+    letter-spacing: 0.02em;  
   }  
-  .tap-hint{  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:9px;  
-    color: rgba(241,230,210,0.3);  
-    letter-spacing:0.05em;  
-  }  
-  
-  .back{  
-    background: var(--paper);  
-    color: var(--ink);  
+
+  .back {  
+    color: var(--text-primary);  
     transform: rotateY(180deg);  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:11.5px;  
-    line-height:1.5;  
-    cursor:pointer;  
-    overflow-y:auto;  
+    font-size: 13px;  
+    line-height: 1.5;  
+    cursor: pointer;  
+    overflow-y: auto;  
   }  
-  .back b{  
-    display:block;  
-    color: var(--copper);  
-    font-family:'Oswald', sans-serif;  
-    font-size:11px;  
-    text-transform:uppercase;  
-    letter-spacing:0.08em;  
-    margin: 8px 0 2px;  
+  .back b {  
+    display: block;  
+    color: var(--accent-amber);  
+    font-size: 11px;  
+    font-weight: 600;  
+    text-transform: uppercase;  
+    letter-spacing: 0.05em;  
+    margin: 12px 0 4px;  
   }  
-  .back b:first-child{ margin-top:0; }  
-  .back .ticket-name{  
-    font-family:'Oswald', sans-serif;  
+  .back b:first-child { margin-top: 0; }  
+  .back .ticket-name {  
+    font-size: 18px;  
     font-weight: 700;  
-    font-size:17px;  
-    color: var(--ink);  
-    letter-spacing:0.005em;  
-    border-bottom: 1px dashed var(--ink-soft);  
-    padding-bottom:6px;  
-    margin-bottom:6px;  
-  }  
-  .ingredient-table{ margin-bottom:2px; }  
-  .ingredient-row{  
-    padding: 3px 0;  
-    border-bottom: 1px dashed rgba(74,59,40,0.22);  
-  }  
-  .ingredient-row:last-child{ border-bottom:none; }  
-  
-  /* === СТИЛИ ДЛЯ КАЛЬКУЛЯТОРА ПОРЦИЙ (только категория "Настойка") === */  
-  .portion-calculator{  
-    margin: 12px 0;  
-  }  
-  .portion-calculator .calc-header{  
-    padding: 10px;  
-    background: rgba(193,101,47,0.1);  
-    border-radius: 4px;  
+    letter-spacing: -0.01em;  
+    color: var(--text-primary);  
+    border-bottom: 1px solid var(--border-subtle);  
+    padding-bottom: 8px;  
     margin-bottom: 8px;  
   }  
-  .portion-calculator .calc-label{  
+
+  .back-photo {  
+    width: 100%;  
+    height: 140px;  
+    object-fit: cover;  
+    border-radius: 12px;  
+    margin-bottom: 10px;  
+    display: block;  
+    cursor: zoom-in;  
+    border: 1px solid var(--border-subtle);
+    transition: opacity 0.2s var(--apple-ease);
+  }  
+  .back-photo:hover { opacity: 0.9; }
+
+  .ingredient-table { margin-bottom: 4px; }  
+  .ingredient-row {  
+    padding: 4px 0;  
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);  
+    color: var(--text-secondary);
+  }  
+  .ingredient-row:last-child { border-bottom: none; }  
+
+  /* Portion Calculator */  
+  .portion-calculator {  
+    margin: 14px 0;  
+  }  
+  .portion-calculator .calc-header {  
+    padding: 12px;  
+    background: rgba(245, 166, 35, 0.08);  
+    border-radius: 12px;  
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 8px;  
+  }  
+  .portion-calculator .calc-label {  
     display: block;  
     font-size: 11px;  
     text-transform: uppercase;  
     letter-spacing: 0.05em;  
-    color: var(--copper);  
+    color: var(--accent-amber);  
     margin-bottom: 8px;  
     font-weight: 600;  
   }  
-  .portion-calculator .calc-input-wrap{  
+  .portion-calculator .calc-input-wrap {  
     display: flex;  
     gap: 8px;  
     align-items: center;  
   }  
-  .portion-calculator .portion-input{  
-    /* font-size 16px — важно для iOS, иначе Safari зумит страницу при фокусе */  
+  .portion-calculator .portion-input {  
     width: 80px;  
-    padding: 6px 8px;  
-    border: 1px dashed var(--ink-soft);  
-    border-radius: 3px;  
-    background: rgba(241,230,210,0.5);  
-    color: var(--ink);  
-    font-family: 'IBM Plex Mono', monospace;  
+    padding: 6px 10px;  
+    border: 1px solid var(--border-subtle);  
+    border-radius: 8px;  
+    background: rgba(0, 0, 0, 0.3);  
+    color: var(--text-primary);  
+    font-family: inherit;  
     font-size: 16px;  
   }  
-  .portion-calculator .portion-input:focus{  
+  .portion-calculator .portion-input:focus {  
     outline: none;  
-    border-color: var(--copper);  
+    border-color: var(--accent-amber);  
   }  
-  .portion-calculator .calc-unit{  
-    font-size: 10px;  
-    color: rgba(74,59,40,0.6);  
+  .portion-calculator .calc-unit {  
+    font-size: 11px;  
+    color: var(--text-secondary);  
   }  
-  .scaled-recipe{  
+  .scaled-recipe {  
     margin-top: 10px;  
-    padding: 8px;  
-    background: rgba(193,101,47,0.06);  
-    border-left: 2px solid var(--copper);  
-    border-radius: 2px;  
-    font-size: 10.5px;  
+    padding: 10px 12px;  
+    background: rgba(0, 0, 0, 0.2);  
+    border-left: 3px solid var(--accent-amber);  
+    border-radius: 8px;  
+    font-size: 12px;  
     line-height: 1.6;  
-    color: var(--ink);  
+    color: var(--text-secondary);  
   }  
-  .scaled-recipe strong{  
+  .scaled-recipe strong {  
     display: block;  
-    color: var(--copper);  
-    font-family: 'Oswald', sans-serif;  
-    font-size: 10px;  
+    color: var(--accent-amber);  
+    font-size: 11px;  
     text-transform: uppercase;  
     letter-spacing: 0.05em;  
     margin-bottom: 4px;  
   }  
-  .scaled-recipe .scaled-row{ padding: 1px 0; }  
-  .scaled-recipe .scaled-empty{  
+  .scaled-recipe .scaled-row { padding: 2px 0; }  
+  .scaled-recipe .scaled-empty {  
     opacity: 0.6;  
     font-style: italic;  
   }  
-  
-  .empty{  
-    text-align:center;  
-    padding: 50px 20px;  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:13px;  
-    color: rgba(241,230,210,0.4);  
+
+  .empty {  
+    text-align: center;  
+    padding: 60px 20px;  
+    font-size: 14px;  
+    color: var(--text-secondary);  
   }  
-  
-  .note{  
-    max-width:640px;  
-    margin: 34px auto 0;  
-    padding: 14px 20px;  
-    text-align:center;  
-    font-family:'IBM Plex Mono', monospace;  
-    font-size:10.5px;  
-    line-height:1.6;  
-    color: rgba(241,230,210,0.35);  
-    border-top: 1px solid var(--line);  
+
+  .note {  
+    max-width: 640px;  
+    margin: 40px auto 0;  
+    padding: 16px 20px;  
+    text-align: center;  
+    font-size: 12px;  
+    line-height: 1.6;  
+    color: var(--text-secondary);  
+    border-top: 1px solid var(--border-subtle);  
   }  
-  
+
   @media (prefers-reduced-motion: reduce){  
-    .card-inner{ transition:none; }  
+    .card-inner { transition: none; }  
   }  
-  .to-top{  
-  position: fixed;  
-  right: 18px;  
-  bottom: 22px;  
-  width: 46px;  
-  height: 46px;  
-  border-radius: 50%;  
-  background: var(--amber);  
-  color: var(--ink);  
-  border: none;  
-  font-size: 20px;  
-  line-height: 1;  
-  cursor: pointer;  
-  box-shadow: 0 4px 14px rgba(0,0,0,0.4);  
-  opacity: 0;  
-  pointer-events: none;  
-  transform: translateY(10px);  
-  transition: opacity .25s ease, transform .25s ease;  
-  z-index: 50;  
-}  
-.to-top.visible{  
-  opacity: 1;  
-  pointer-events: auto;  
-  transform: translateY(0);  
-}  
-  
-/* === ЛАЙТБОКС ДЛЯ ФОТО (увеличение по клику, с затемнением фона) ===  
-   z-index: 200 — выше drawer (91) и принтера чека (6), гарантированно  
-   перекрывает любой другой слой интерфейса. */  
-.lightbox-overlay{  
-  position: fixed;  
-  inset: 0;  
-  background: rgba(0,0,0,0.92);  
-  z-index: 200;  
-  display: flex;  
-  align-items: center;  
-  justify-content: center;  
-  padding: 20px;  
-  opacity: 0;  
-  pointer-events: none;  
-  transition: opacity .25s ease;  
-}  
-.lightbox-overlay.open{  
-  opacity: 1;  
-  pointer-events: auto;  
-}  
-.lightbox-img{  
-  max-width: 100%;  
-  max-height: 100%;  
-  object-fit: contain;  
-  border-radius: 6px;  
-  box-shadow: 0 10px 40px rgba(0,0,0,0.6);  
-  transform: scale(0.92);  
-  transition: transform .25s ease;  
-}  
-.lightbox-overlay.open .lightbox-img{  
-  transform: scale(1);  
-}  
-.lightbox-close{  
-  position: absolute;  
-  top: 18px;  
-  right: 18px;  
-  width: 40px;  
-  height: 40px;  
-  border-radius: 50%;  
-  background: var(--bg-2);  
-  border: 1px solid var(--line);  
-  color: var(--paper);  
-  font-size: 20px;  
-  line-height: 1;  
-  cursor: pointer;  
-  display: flex;  
-  align-items: center;  
-  justify-content: center;  
-}  
-.lightbox-close:hover{ border-color: var(--amber); color: var(--amber); }  
+
+  .to-top {  
+    position: fixed;  
+    right: 20px;  
+    bottom: 24px;  
+    width: 48px;  
+    height: 48px;  
+    border-radius: 980px;  
+    background: var(--accent-amber);  
+    color: #17120e;  
+    border: none;  
+    font-size: 20px;  
+    font-weight: 600;
+    line-height: 1;  
+    cursor: pointer;  
+    box-shadow: 0 10px 20px rgba(0,0,0,0.4);  
+    opacity: 0;  
+    pointer-events: none;  
+    transform: translateY(10px);  
+    transition: opacity 0.2s var(--apple-ease), transform 0.2s var(--apple-ease);  
+    z-index: 50;  
+  }  
+  .to-top:active {
+    transform: scale(0.95);
+  }
+  .to-top.visible {  
+    opacity: 1;  
+    pointer-events: auto;  
+    transform: translateY(0);  
+  }  
+
+  /* Lightbox */  
+  .lightbox-overlay {  
+    position: fixed;  
+    inset: 0;  
+    background: rgba(0, 0, 0, 0.85);  
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    z-index: 200;  
+    display: flex;  
+    align-items: center;  
+    justify-content: center;  
+    padding: 20px;  
+    opacity: 0;  
+    pointer-events: none;  
+    transition: opacity 0.3s var(--apple-ease);  
+  }  
+  .lightbox-overlay.open {  
+    opacity: 1;  
+    pointer-events: auto;  
+  }  
+  .lightbox-img {  
+    max-width: 100%;  
+    max-height: 100%;  
+    object-fit: contain;  
+    border-radius: 16px;  
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);  
+    transform: scale(0.95);  
+    transition: transform 0.3s var(--apple-ease);  
+  }  
+  .lightbox-overlay.open .lightbox-img {  
+    transform: scale(1);  
+  }  
+  .lightbox-close {  
+    position: absolute;  
+    top: 20px;  
+    right: 20px;  
+    width: 40px;  
+    height: 40px;  
+    border-radius: 50%;  
+    background: rgba(255, 255, 255, 0.1);  
+    border: 1px solid rgba(255, 255, 255, 0.15);  
+    color: var(--text-primary);  
+    font-size: 22px;  
+    line-height: 1;  
+    cursor: pointer;  
+    display: flex;  
+    align-items: center;  
+    justify-content: center;  
+    transition: background 0.2s var(--apple-ease), transform 0.1s var(--apple-ease);
+  }  
+  .lightbox-close:hover { background: rgba(255, 255, 255, 0.2); }  
+  .lightbox-close:active { transform: scale(0.95); }
 </style>  
 </head>  
 <body>  
@@ -762,10 +822,6 @@ function ingredientRows(text){
   
 // ========== КАЛЬКУЛЯТОР ПОРЦИЙ ДЛЯ НАСТОЕК ==========  
   
-// Разбивает состав на отдельные строки-ингредиенты — та же логика приоритета,  
-// что и в ingredientRows(): сначала экранированный \n, потом настоящий \n,  
-// потом "·" (демо-данные), и только в последнюю очередь — авто-расстановка  
-// переносов по единицам измерения.  
 function splitCompoundToLines(text){  
   let raw = String(text || "").trim();  
   let lines;  
@@ -782,20 +838,8 @@ function splitCompoundToLines(text){
   return lines.map(s => s.trim()).filter(Boolean);  
 }  
   
-// ИСПРАВЛЕНО: название ингредиента теперь ".+?" (любые символы, нежадно) —  
-// раньше было "[А-Яа-яЁёA-Za-z\s\-]+?", которое НЕ пропускало кавычки,  
-// скобки и т.п., поэтому строка вида  
-//   Водка "Русский стандарт" 1л  
-// не находила совпадения (кавычки внутри названия) и попадала в разряд  
-// "нераспознано", то есть не масштабировалась. Число+единица по-прежнему  
-// ищутся строго в конце строки.  
 const INGREDIENT_RE = /^(.+?)\s+(\d+(?:[.,]\d+)?)\s*(мл|гр|г|кг|л|шт|порц|долька|дольки|долек|слайс|слайса|слайсов|лист|листик|листика|листа|стебель|стебля|палочка|палочки|щепотка|щепотки|капля|капли|капель|зубчик|зубчика|зубчиков|пучок|пучка|ч\.л\.|ст\.л\.)?\.?$/;  
   
-/**  
- * Парсит текст состава в массив ингредиентов с числами.  
- * Строки без явного числа в конце (например "тоник — по вкусу") возвращаются  
- * как есть, с number=null — не масштабируются, но выводятся без изменений.  
- */  
 function parseIngredients(text){  
   const lines = splitCompoundToLines(text);  
   return lines.map(line => {  
@@ -812,16 +856,11 @@ function parseIngredients(text){
   });  
 }  
   
-// Форматирует число после умножения: целые — без дробной части,  
-// дробные — до 2 знаков после запятой, без хвостовых нулей.  
 function formatScaledNumber(num){  
   const rounded = Math.round(num * 100) / 100;  
   return String(rounded);  
 }  
   
-/**  
- * Масштабирует рецепт на множитель и возвращает массив строк для отображения.  
- */  
 function scaleRecipe(text, multiplier){  
   const ingredients = parseIngredients(text);  
   return ingredients.map(ing => {  
@@ -833,11 +872,6 @@ function scaleRecipe(text, multiplier){
   });  
 }  
   
-/**  
- * Создаёт HTML калькулятора порций для настойки. Исходный состав в  
- * пересчёт передаётся через замыкание в render() (не через data-атрибут),  
- * поэтому кавычки/спецсимволы в тексте состава не ломают HTML-разметку.  
- */  
 function createPortionCalculator(itemName){  
   const safeId = "calc-" + itemName.replace(/[^a-zA-Zа-яА-Я0-9]+/g, "-").toLowerCase();  
   return `  
@@ -929,7 +963,6 @@ function render(){
   
     grid.appendChild(card);  
   
-    // Фото на обороте: клик открывает лайтбокс, не переворачивая карточку обратно  
     const photoImg = back.querySelector(".back-photo");  
     if(photoImg){  
       photoImg.addEventListener("click", (e) => {  
@@ -938,11 +971,10 @@ function render(){
       });  
     }  
   
-    // Калькулятор порций (только для Настойки)  
     if(isRecipe){  
       const portionInput = back.querySelector(".portion-input");  
       const scaledDiv = back.querySelector(".scaled-recipe");  
-      const originalCompound = item.compound; // берём из замыкания, не из data-атрибута  
+      const originalCompound = item.compound;  
   
       function updateScaledRecipe(){  
         const raw = parseFloat(portionInput.value);  
@@ -1025,8 +1057,6 @@ document.getElementById("surprise").addEventListener("click", () => {
   }  
 });  
   
-// Кнопка "наверх": скролл теперь на body (см. html{overflow:hidden} выше),  
-// поэтому слушаем scroll на body, а не на window  
 const toTopBtn = document.getElementById("toTop");  
 document.body.addEventListener("scroll", () => {  
   if(document.body.scrollTop > window.innerHeight * 0.6){  
@@ -1044,3 +1074,4 @@ loadData().then(render);
   
 </body>  
 </html>
+
