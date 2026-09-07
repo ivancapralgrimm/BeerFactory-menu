@@ -6,397 +6,524 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#000000">
+<meta name="theme-color" content="#17120e">
 <link rel="icon" type="image/png" sizes="32x32" href="apple-touch-icon.png">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>BeerFactory — Обучение</title>
 <style>
-  /* Те же 3 базовых источника, что и на главной (index.html) — палитра и Oswald/IBM Plex Mono
-     скопированы оттуда один в один. Плюс Source Serif 4 — ТОЛЬКО для длинного текста статей
-     (Oswald — display-шрифт, для абзацев в 200-400 слов он "кричит"). */
-  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Oswald:wght@400;500;600;700;900&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap');
-
-  :root{
-    --bg: #17110c;
-    --bg-2: #1f1710;
-    --paper: #f1e6d2;
-    --paper-dim: #e3d3b6;
-    --amber: #e8a33d;
-    --copper: #c1652f;
-    --ink: #241a10;
-    --ink-soft: #4a3b28;
-    --line: rgba(241,230,210,0.14);
+  :root {
+    --bg-main: #17120e;
+    --bg-card: rgba(38, 28, 20, 0.9);
+    --accent-amber: #f5a623;
+    --accent-amber-glow: rgba(245, 166, 35, 0.25);
+    --accent-green: #34c759;
+    --accent-red: #ff3b30;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --border-subtle: rgba(245, 166, 35, 0.15);
+    --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);
   }
-  * { box-sizing: border-box; }
 
-  /* Жёстко запрещаем горизонтальный скролл странице — сайт мобильный,
-     "расползание" по бокам чаще всего именно отсюда: какой-то внутренний
-     элемент чуть шире экрана и раздвигает весь документ */
-  html, body{
+  * { 
+    box-sizing: border-box; 
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
     max-width: 100%;
     overflow-x: hidden;
   }
 
-  body{
-    margin:0;
-    background:
-      radial-gradient(circle at 15% -10%, rgba(232,163,61,0.14), transparent 45%),
-      radial-gradient(circle at 100% 0%, rgba(193,101,47,0.10), transparent 40%),
-      var(--bg);
-    color: var(--paper);
-    font-family: 'Oswald', sans-serif;
-    padding: 0 0 80px;
-    min-height:100vh;
-  }
-
-  /* Индикатор прогресса чтения — тонкая полоса под хедером, растёт по скроллу */
-  .progress-rail{ position: sticky; top:0; z-index:40; height:3px; background: var(--line); }
-  .progress-fill{
-    height:100%; width:0%;
-    background: linear-gradient(90deg, var(--copper), var(--amber));
-    transition: width .1s linear;
-  }
-
-  header{
-    padding: 54px 20px 20px;
-    text-align:center;
-    border-bottom: 1px solid var(--line);
-  }
-  .kicker{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    letter-spacing:0.25em;
-    text-transform:uppercase;
-    color: var(--amber);
-    margin-bottom:8px;
-  }
-  h1{
-    font-family:'Oswald', sans-serif;
-    font-weight: 900;
-    font-size: 42px;
-    letter-spacing: 0.02em;
+  body {
     margin: 0;
-    line-height:0.9;
-    background: linear-gradient(180deg, #f6e6c6, var(--amber));
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    background-color: var(--bg-main);
+    background-image: 
+      radial-gradient(circle at 50% 0%, var(--accent-amber-glow), transparent 60%),
+      radial-gradient(circle at 80% 100%, rgba(245, 166, 35, 0.08), transparent 50%);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+    padding: 0 0 80px;
+    min-height: 100vh;
   }
-  .sub{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:12px;
-    color: var(--paper-dim);
-    opacity:0.7;
-    margin-top:10px;
-  }
-  .back-link{
-    display:inline-block;
-    margin-top:16px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    letter-spacing:0.05em;
-    text-transform:uppercase;
-    color: var(--amber);
-    text-decoration:none;
-    border:1px dashed var(--line);
-    padding:8px 16px;
-    border-radius:3px;
-  }
-  .back-link:hover{ border-color: var(--amber); }
 
-  /* ===================== ОДНА КОЛОНКА, ЖЁСТКО ОГРАНИЧЕНА ПО ШИРИНЕ =====================
-     Та же ширина/отступы, что у .controls на главной странице — единственный "источник
-     правды" по горизонтали на этой странице, ничего шире него быть не должно. */
-  .page{
+  /* Индикатор прогресса чтения */
+  .progress-rail { 
+    position: sticky; 
+    top: 0; 
+    z-index: 40; 
+    height: 3px; 
+    background: rgba(255, 255, 255, 0.05); 
+  }
+  .progress-fill {
+    height: 100%; 
+    width: 0%;
+    background: var(--accent-amber);
+    box-shadow: 0 0 10px var(--accent-amber-glow);
+    transition: width 0.1s linear;
+  }
+
+  /* Header */
+  header {
+    padding: 50px 20px 24px;
+    text-align: center;
+    border-bottom: 1px solid var(--border-subtle);
+    background: rgba(23, 18, 14, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+  .kicker {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent-amber);
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 0;
+    line-height: 1.05;
+    color: var(--text-primary);
+  }
+  .sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+  }
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 18px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--accent-amber);
+    text-decoration: none;
+    background: rgba(245, 166, 35, 0.08);
+    border: 1px solid var(--border-subtle);
+    padding: 8px 18px;
+    border-radius: 980px;
+    transition: opacity 0.2s var(--apple-ease), transform 0.1s var(--apple-ease), border-color 0.2s var(--apple-ease), background 0.2s var(--apple-ease);
+  }
+  .back-link:hover { 
+    border-color: var(--accent-amber); 
+    background: rgba(245, 166, 35, 0.15);
+  }
+  .back-link:active {
+    transform: scale(0.98);
+  }
+
+  /* Container */
+  .page {
     width: 100%;
     max-width: 640px;
-    margin: 20px auto 0;
+    margin: 24px auto 0;
     padding: 0 16px;
   }
 
-  /* ---------- Поиск + кнопка "Меню" (вместо горизонтальных кнопок-тем) ---------- */
-  .topbar{ display:flex; align-items:center; gap:10px; margin-bottom:10px; }
-
-  .menu-trigger{
-    flex-shrink:0;
-    width:auto;
-    display:flex; align-items:center; gap:8px;
-    background: var(--bg-2);
-    border: 1px dashed var(--line);
-    border-radius: 999px;
-    padding: 10px 14px;
-    cursor:pointer;
-    font-family:'IBM Plex Mono', monospace;
-    color: var(--paper);
+  /* Topbar & Search */
+  .topbar { 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    margin-bottom: 14px; 
   }
-  .menu-trigger:hover{ border-color: var(--amber); }
-  .menu-trigger .mt-icon{ font-size:14px; flex-shrink:0; }
-  .menu-trigger .mt-label{
-    font-size:12px; letter-spacing:0.03em; text-transform:uppercase;
-    color: var(--amber); font-weight:600;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+
+  .menu-trigger {
+    flex-shrink: 0;
+    width: auto;
+    display: flex; 
+    align-items: center; 
+    gap: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 980px;
+    padding: 10px 18px;
+    cursor: pointer;
+    color: var(--text-primary);
+    transition: opacity 0.2s var(--apple-ease), transform 0.1s var(--apple-ease), background 0.2s var(--apple-ease);
+  }
+  .menu-trigger:hover { background: rgba(255, 255, 255, 0.12); }
+  .menu-trigger:active { transform: scale(0.98); }
+  .menu-trigger .mt-icon { font-size: 14px; flex-shrink: 0; color: var(--accent-amber); }
+  .menu-trigger .mt-label {
+    font-size: 12px; 
+    font-weight: 600;
+    letter-spacing: 0.05em; 
+    text-transform: uppercase;
+    color: var(--accent-amber); 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis;
     max-width: 34vw;
   }
-  .menu-trigger .mt-chev{ color: var(--paper-dim); font-size:11px; flex-shrink:0; }
+  .menu-trigger .mt-chev { color: var(--text-secondary); font-size: 11px; flex-shrink: 0; }
 
-  /* ---------- Поиск-лупа: пилюля справа, раскрывается до меню ---------- */
-  .search-slot{
-    flex:1;
-    display:flex; justify-content:flex-end; align-items:center;
-    position:relative;
-    min-width:0;
+  .search-slot {
+    flex: 1;
+    display: flex; 
+    justify-content: flex-end; 
+    align-items: center;
+    position: relative;
+    min-width: 0;
   }
-  .search-icon-btn{
-    flex-shrink:0;
-    width:40px; height:40px;
-    border-radius:50%;
-    background: var(--bg-2);
-    border: 1px dashed var(--line);
-    color: var(--paper);
-    font-size:15px;
-    cursor:pointer;
+  .search-icon-btn {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 980px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-primary);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: opacity 0.2s var(--apple-ease), transform 0.1s var(--apple-ease), background 0.2s var(--apple-ease);
   }
-  .search-icon-btn:hover{ border-color: var(--amber); }
-  .search-slot.open .search-icon-btn{ display:none; }
+  .search-icon-btn:hover { background: rgba(255, 255, 255, 0.12); }
+  .search-icon-btn:active { transform: scale(0.98); }
+  .search-slot.open .search-icon-btn { display: none; }
 
-  input[type="text"]#search{
-    width:0; min-width:0; opacity:0;
-    padding:0; border:none;
-    background: var(--bg-2);
-    border-radius: 999px;
-    color: var(--paper);
-    font-family:'IBM Plex Mono', monospace;
+  input[type="text"]#search {
+    width: 0; 
+    min-width: 0; 
+    opacity: 0;
+    padding: 0; 
+    border: none;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 980px;
+    color: var(--text-primary);
+    font-family: inherit;
     font-size: 16px;
-    outline:none;
-    transition: width .25s ease, opacity .2s ease, padding .25s ease, border-color .15s ease;
+    outline: none;
+    transition: width 0.3s var(--apple-ease), opacity 0.2s var(--apple-ease), padding 0.3s var(--apple-ease), border-color 0.2s var(--apple-ease);
   }
-  .search-slot.open input[type="text"]#search{
-    width:100%; opacity:1;
-    padding: 11px 16px;
-    border: 1px dashed var(--line);
+  .search-slot.open input[type="text"]#search {
+    width: 100%; 
+    opacity: 1;
+    padding: 10px 18px;
+    border: 1px solid var(--border-subtle);
   }
-  .search-slot.open input[type="text"]#search:focus{ border-color: var(--amber); }
-  input[type="text"]#search::placeholder{ color: rgba(241,230,210,0.35); }
+  .search-slot.open input[type="text"]#search:focus { border-color: var(--accent-amber); }
+  input[type="text"]#search::placeholder { color: var(--text-secondary); }
 
-  /* ---------- Лента: тема → статьи-аккордеоны ---------- */
-  .feed{ margin-top: 22px; }
-  .topic-group{ margin-bottom: 30px; }
-  .topic-title{
-    font-family:'Oswald', sans-serif;
-    font-weight:700;
-    font-size:20px;
-    letter-spacing:0.01em;
-    color: var(--paper);
-    display:flex; align-items:center; gap:9px;
-    margin: 0 0 12px;
-    padding-bottom:9px;
-    border-bottom: 1px dashed var(--line);
+  /* Feed & Topic Groups */
+  .feed { margin-top: 24px; }
+  .topic-group { margin-bottom: 32px; }
+  .topic-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    display: flex; 
+    align-items: center; 
+    gap: 10px;
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border-subtle);
   }
-  .topic-title .ic{ font-size:18px; }
+  .topic-title .ic { font-size: 20px; }
 
-  .entry{
-    background: var(--bg-2);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    margin-bottom: 10px;
+  /* Entry Accordions */
+  .entry {
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    margin-bottom: 12px;
     overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    transition: border-color 0.2s var(--apple-ease);
   }
-  .entry-head{
-    width:100%;
-    display:flex; align-items:center; gap:10px;
-    background:none; border:none; cursor:pointer;
-    padding: 13px 14px;
-    text-align:left;
-    color: var(--paper);
+  .entry:hover {
+    border-color: rgba(245, 166, 35, 0.3);
   }
-  .entry-head:hover .entry-title{ color: var(--amber); }
-  .entry-icon{ font-size:17px; flex-shrink:0; }
-  .entry-title{
-    flex:1; min-width:0;
-    font-family:'Oswald', sans-serif;
-    font-weight:600;
-    font-size:15.5px;
-    transition: color .15s ease;
+  .entry-head {
+    width: 100%;
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+    background: none; 
+    border: none; 
+    cursor: pointer;
+    padding: 18px 20px;
+    text-align: left;
+    color: var(--text-primary);
   }
-  .entry-meta{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:10px;
-    color: rgba(241,230,210,0.4);
-    white-space:nowrap;
-    flex-shrink:0;
+  .entry-head:active {
+    background: rgba(255, 255, 255, 0.02);
   }
-  .entry-chevron{
-    font-size:12px; color: var(--paper-dim);
-    transition: transform .3s ease;
-    flex-shrink:0;
+  .entry-icon { font-size: 18px; flex-shrink: 0; }
+  .entry-title {
+    flex: 1; 
+    min-width: 0;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
+    transition: color 0.2s var(--apple-ease);
   }
-  .entry.open .entry-chevron{ transform: rotate(180deg); }
+  .entry-head:hover .entry-title { color: var(--accent-amber); }
+  .entry-meta {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--accent-amber);
+    background: rgba(245, 166, 35, 0.1);
+    padding: 4px 8px;
+    border-radius: 6px;
+    border: 1px solid rgba(245, 166, 35, 0.15);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .entry-chevron {
+    font-size: 12px; 
+    color: var(--text-secondary);
+    transition: transform 0.3s var(--apple-ease);
+    flex-shrink: 0;
+  }
+  .entry.open .entry-chevron { transform: rotate(180deg); }
 
-  /* Раскрытие на чистом CSS-гриде — без замера scrollHeight в JS */
-  .entry-body{ display:grid; grid-template-rows: 0fr; transition: grid-template-rows .35s ease; }
-  .entry.open .entry-body{ grid-template-rows: 1fr; }
-  .entry-body-inner{ overflow:hidden; min-height:0; }
-  .entry-content{
-    padding: 2px 14px 18px;
-    font-family:'Source Serif 4', Georgia, serif;
-    font-size: 15.5px;
-    line-height: 1.7;
-    color: var(--paper-dim);
+  .entry-body { 
+    display: grid; 
+    grid-template-rows: 0fr; 
+    transition: grid-template-rows 0.4s var(--apple-ease); 
   }
-  .entry-content p{ margin: 0 0 13px; }
-  .entry-content strong{ color: var(--paper); font-weight:600; }
-  .entry-content em{ font-style:italic; }
-  .entry-content ul, .entry-content ol{ margin: 0 0 13px; padding-left: 20px; }
-  .entry-content li{ margin-bottom: 5px; }
-  .entry-content blockquote{
-    margin: 0 0 13px;
-    padding: 8px 12px;
-    border-left: 3px solid var(--amber);
-    background: rgba(232,163,61,0.08);
+  .entry.open .entry-body { grid-template-rows: 1fr; }
+  .entry-body-inner { overflow: hidden; min-height: 0; }
+  .entry-content {
+    padding: 0 20px 20px;
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--text-secondary);
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+    margin-top: 4px;
+    padding-top: 16px;
+  }
+  .entry-content p { margin: 0 0 14px; }
+  .entry-content p:last-child { margin-bottom: 0; }
+  .entry-content strong { color: var(--text-primary); font-weight: 600; }
+  .entry-content em { font-style: italic; color: var(--text-primary); }
+  .entry-content ul, .entry-content ol { margin: 0 0 14px; padding-left: 20px; }
+  .entry-content li { margin-bottom: 6px; }
+  .entry-content blockquote {
+    margin: 0 0 14px;
+    padding: 12px 16px;
+    border-left: 3px solid var(--accent-amber);
+    background: rgba(245, 166, 35, 0.08);
+    border-radius: 0 12px 12px 0;
     font-style: italic;
-    color: var(--paper);
+    color: var(--text-primary);
   }
-  .entry-content mark{
-    background: rgba(232,163,61,0.18);
-    color: var(--amber);
-    padding: 0 2px;
-    border-radius:2px;
-  }
-
-  .entry-note{ margin-top: 4px; }
-  .note-toggle{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:11px;
-    color: var(--copper);
-    background:none; border: 1px dashed var(--line);
-    border-radius:3px;
-    padding: 6px 11px;
-    cursor:pointer;
-  }
-  .note-toggle:hover{ border-color: var(--copper); }
-  .note-area{
-    display:none;
-    width:100%;
-    margin-top:8px;
-    background: var(--bg);
-    border: 1px dashed var(--line);
-    border-radius:4px;
-    color: var(--paper);
-    font-family:'IBM Plex Mono', monospace;
-    font-size:12.5px;
-    padding:10px;
-    min-height:60px;
-    resize:vertical;
-  }
-  .note-area.visible{ display:block; }
-  .note-saved{
-    font-family:'IBM Plex Mono', monospace;
-    font-size:10px;
-    color: rgba(241,230,210,0.35);
-    margin-top:4px;
-    height:12px;
+  .entry-content mark {
+    background: rgba(245, 166, 35, 0.2);
+    color: var(--accent-amber);
+    padding: 2px 6px;
+    border-radius: 4px;
   }
 
-  .empty{
-    text-align:center;
-    padding: 50px 20px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:13px;
-    color: rgba(241,230,210,0.4);
+  /* Personal Notes */
+  .entry-note { margin-top: 16px; padding-top: 12px; border-top: 1px rgba(255, 255, 255, 0.05) solid; }
+  .note-toggle {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 980px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: opacity 0.2s var(--apple-ease), transform 0.1s var(--apple-ease), background 0.2s var(--apple-ease);
   }
-  .empty .big{ font-size:32px; display:block; margin-bottom:10px; }
+  .note-toggle:hover { 
+    background: rgba(255, 255, 255, 0.12);
+    border-color: var(--border-subtle);
+  }
+  .note-toggle:active { transform: scale(0.98); }
+  .note-area {
+    display: none;
+    width: 100%;
+    margin-top: 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 14px;
+    padding: 12px;
+    min-height: 80px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s var(--apple-ease);
+  }
+  .note-area:focus {
+    border-color: var(--accent-amber);
+  }
+  .note-area.visible { display: block; }
+  .note-saved {
+    font-size: 11px;
+    color: var(--accent-green);
+    margin-top: 6px;
+    height: 14px;
+    font-weight: 500;
+  }
 
-  /* ===================== БОКОВОЙ СЛАЙДЕР С ТЕМАМИ ===================== */
-  .drawer-overlay{
-    position: fixed; inset:0;
-    background: rgba(0,0,0,0.55);
-    opacity:0; pointer-events:none;
-    transition: opacity .25s ease;
+  .empty {
+    text-align: center;
+    padding: 60px 20px;
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+  .empty .big { font-size: 32px; display: block; margin-bottom: 12px; }
+
+  /* Drawer Navigation */
+  .drawer-overlay {
+    position: fixed; 
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    opacity: 0; 
+    pointer-events: none;
+    transition: opacity 0.3s var(--apple-ease);
     z-index: 90;
   }
-  .drawer-overlay.open{ opacity:1; pointer-events:auto; }
+  .drawer-overlay.open { opacity: 1; pointer-events: auto; }
 
-  .drawer{
-    position: fixed; top:0; left:0; bottom:0;
-    width: min(300px, 82vw);
-    background: var(--bg-2);
-    border-right: 1px solid var(--line);
+  .drawer {
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    bottom: 0;
+    width: min(320px, 85vw);
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-right: 1px solid var(--border-subtle);
     z-index: 91;
     transform: translateX(-100%);
-    transition: transform .3s cubic-bezier(.4,.1,.2,1);
-    display:flex; flex-direction:column;
-    box-shadow: 10px 0 30px rgba(0,0,0,0.4);
+    transition: transform 0.4s var(--apple-ease);
+    display: flex; 
+    flex-direction: column;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
   }
-  .drawer.open{ transform: translateX(0); }
+  .drawer.open { transform: translateX(0); }
 
-  .drawer-head{
-    display:flex; align-items:center; justify-content:space-between;
-    padding: 20px 16px 14px;
-    border-bottom: 1px solid var(--line);
+  .drawer-head {
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between;
+    padding: 24px 20px 16px;
+    border-bottom: 1px solid var(--border-subtle);
   }
-  .drawer-head .dh-title{
-    font-family:'Oswald', sans-serif;
-    font-weight:700;
-    font-size:19px;
-    color: var(--paper);
+  .drawer-head .dh-title {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-primary);
   }
-  .drawer-close{
-    background:none; border:none;
-    color: var(--paper-dim);
-    font-size:22px; line-height:1;
-    cursor:pointer;
-    padding:4px 8px;
+  .drawer-close {
+    background: rgba(255, 255, 255, 0.08); 
+    border: none;
+    color: var(--text-secondary);
+    font-size: 20px; 
+    line-height: 1;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 0.2s var(--apple-ease), background 0.2s var(--apple-ease);
   }
-  .drawer-close:hover{ color: var(--amber); }
+  .drawer-close:hover { color: var(--text-primary); background: rgba(255, 255, 255, 0.15); }
 
-  .drawer-list{
-    flex:1;
-    overflow-y:auto;
-    padding: 10px 8px;
-    display:flex; flex-direction:column; gap:2px;
+  .drawer-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px 10px;
+    display: flex; 
+    flex-direction: column; 
+    gap: 4px;
   }
-  .drawer-item{
-    display:flex; align-items:center; gap:10px;
-    width:100%;
-    text-align:left;
-    background:transparent;
-    border:none;
-    border-left: 3px solid transparent;
-    padding: 12px 12px;
-    border-radius: 0 6px 6px 0;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:13px;
-    color: var(--paper-dim);
-    cursor:pointer;
-    transition: all .15s ease;
+  .drawer-item {
+    display: flex; 
+    align-items: center; 
+    gap: 12px;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 12px 16px;
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.2s var(--apple-ease), color 0.2s var(--apple-ease), transform 0.1s var(--apple-ease);
   }
-  .drawer-item .di-icon{ font-size:16px; flex-shrink:0; }
-  .drawer-item .di-label{ flex:1; }
-  .drawer-item .di-count{ font-size:11px; opacity:.45; }
-  .drawer-item:hover{ background: rgba(232,163,61,0.07); color: var(--paper); }
-  .drawer-item.active{
-    border-left-color: var(--amber);
-    background: rgba(232,163,61,0.12);
-    color: var(--amber);
-    font-weight:600;
+  .drawer-item .di-icon { font-size: 16px; flex-shrink: 0; }
+  .drawer-item .di-label { flex: 1; }
+  .drawer-item .di-count { 
+    font-size: 11px; 
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.08);
+    padding: 2px 6px;
+    border-radius: 6px;
+  }
+  .drawer-item:hover { background: rgba(245, 166, 35, 0.08); color: var(--text-primary); }
+  .drawer-item:active { transform: scale(0.98); }
+  .drawer-item.active {
+    background: rgba(245, 166, 35, 0.15);
+    color: var(--accent-amber);
+    font-weight: 600;
+  }
+  .drawer-item.active .di-count {
+    background: rgba(245, 166, 35, 0.2);
+    color: var(--accent-amber);
   }
 
-  /* Кнопка "наверх" — как на главной */
-  .to-top{
-    position: fixed; right: 18px; bottom: 22px;
-    width: 46px; height: 46px; border-radius: 50%;
-    background: var(--amber); color: var(--ink); border:none;
-    font-size: 20px; line-height: 1; cursor:pointer;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-    opacity:0; pointer-events:none; transform: translateY(10px);
-    transition: opacity .25s ease, transform .25s ease;
+  /* Scroll To Top Button */
+  .to-top {
+    position: fixed; 
+    right: 20px; 
+    bottom: 24px;
+    width: 48px; 
+    height: 48px; 
+    border-radius: 980px;
+    background: var(--accent-amber); 
+    color: #17120e; 
+    border: none;
+    font-size: 20px; 
+    font-weight: 600;
+    line-height: 1; 
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+    opacity: 0; 
+    pointer-events: none; 
+    transform: translateY(10px);
+    transition: opacity 0.2s var(--apple-ease), transform 0.2s var(--apple-ease);
     z-index: 50;
   }
-  .to-top.visible{ opacity:1; pointer-events:auto; transform:translateY(0); }
+  .to-top:active { transform: scale(0.95); }
+  .to-top.visible { opacity: 1; pointer-events: auto; transform: translateY(0); }
 
   @media (prefers-reduced-motion: reduce){
-    .entry-body, .entry-chevron, .drawer, .drawer-overlay{ transition:none; }
+    .entry-body, .entry-chevron, .drawer, .drawer-overlay { transition: none; }
   }
 </style>
 </head>
@@ -419,7 +546,7 @@
       <span class="mt-chev">▾</span>
     </button>
     <div class="search-slot" id="searchSlot">
-      <button class="search-icon-btn" id="searchIconBtn" aria-label="Поиск">🔍</button>
+      <button class="search-icon-btn" id="searchIconBtn" aria-label="Поиск">🔎 Поиск</button>
       <input type="text" id="search" placeholder="найти по статьям...">
     </div>
   </div>
@@ -674,8 +801,7 @@ function render(){
 
     group.items.forEach(item => {
       const mins = readingTime(item.body);
-// стало:
-const paragraphs = item.body.split('\n\n').map(formatParagraph).join('');
+      const paragraphs = item.body.split('\n\n').map(formatParagraph).join('');
 
       const entry = document.createElement('article');
       entry.className = 'entry';
@@ -783,3 +909,4 @@ loadTrainingData().then(items => {
 
 </body>
 </html>
+
