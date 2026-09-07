@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <!-- Строгая мобильная адаптация и отключение зума -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>BeerFactory — Аттестация</title>
+  <style>
+    /* ==========================================================================
+       1. СБРОС И БЛОКИРОВКА МАСШТАБИРОВАНИЯ
+       ========================================================================== */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      touch-action: manipulation; /* Запрет двойного тапа и pinch-to-zoom */
+      -webkit-text-size-adjust: 100%; /* Запрет автоизменения шрифта */
+      overflow-x: hidden;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Гарантирует отсутствие автозума клавиатуры в iOS Safari (шрифт не менее 16px) */
+    input, select, textarea, button, .option-item {
+      font-size: 16px !important;
+      touch-action: manipulation;
+    }
+
+    :root {
+      --bg-main: #17120e;
+      --bg-card: rgba(38, 28, 20, 0.9);
+      --accent-amber: #f5a623;
+      --accent-amber-glow: rgba(245, 166, 35, 0.25);
+      --accent-green: #34c759;
+      --accent-red: #ff3b30;
+      --text-primary: #f5f5f7;
+      --text-secondary: #a1a1a6;
+      --border-subtle: rgba(245, 166, 35, 0.15);
+      --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    /* Мобильный контейнер */
+    .quiz-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: 24px 20px;
+      max-width: 480px;
+      width: 100%;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .hidden { display: none !important; }
+
+    .tag {
+      color: var(--accent-amber);
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 10px;
+    }
+
+    h2 {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      margin-bottom: 12px;
+      line-height: 1.3;
+    }
+
+    p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.4;
+      margin-bottom: 20px;
+    }
+
+    .score-badge {
+      font-size: 38px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .score-badge.success { color: var(--accent-green); }
+    .score-badge.fail { color: var(--accent-red); }
+
+    /* Варианты ответов */
+    .options-list {
+      list-style: none;
+      margin-bottom: 20px;
+    }
+
+    .option-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      cursor: pointer;
+      line-height: 1.3;
+      transition: background 0.2s var(--apple-ease), border-color 0.2s var(--apple-ease);
+    }
+
+    .option-item:active {
+      background: rgba(245, 166, 35, 0.2);
+    }
+
+    .option-item.selected {
+      background: var(--accent-amber);
+      color: #17120e;
+      font-weight: 600;
+      border-color: var(--accent-amber);
+    }
+
+    /* Сводка ошибок */
+    .errors-summary {
+      background: rgba(255, 59, 48, 0.08);
+      border: 1px solid rgba(255, 59, 48, 0.2);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 20px;
+      text-align: left;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .errors-summary h3 {
+      font-size: 15px;
+      color: var(--accent-red);
+      margin-bottom: 10px;
+    }
+
+    .error-item {
+      font-size: 13px;
+      margin-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 8px;
+    }
+
+    .error-item:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .error-q { font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+    .error-user { color: var(--accent-red); }
+    .error-correct { color: var(--accent-green); }
+
+    /* Кнопки */
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .apple-btn {
+      background: var(--accent-amber);
+      color: #17120e;
+      font-weight: 600;
+      padding: 14px 20px;
+      border-radius: 980px;
+      border: none;
+      cursor: pointer;
+      width: 100%;
+      text-align: center;
+      transition: opacity 0.2s var(--apple-ease), transform 0.1s var(--apple-ease);
+    }
+
+    .apple-btn:active {
+      transform: scale(0.98);
+    }
+
+    .apple-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .apple-btn-secondary {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-primary);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="quiz-card">
+    
+    <!-- ЭКРАН 1: СТАРТ -->
+    <div id="start-screen">
+      <div class="tag">Аттестация</div>
+      <h1>Проверка знаний</h1>
+      <p id="start-desc">Загрузка вопросов из базы...</p>
+      <div class="btn-group">
+        <button class="apple-btn" id="start-btn" onclick="startQuiz()" disabled>Начать</button>
+        <button class="apple-btn apple-btn-secondary" onclick="goToMenu()">Вернуться в меню</button>
+      </div>
+    </div>
+
+    <!-- ЭКРАН 2: ВОПРОСЫ -->
+    <div id="quiz-screen" class="hidden">
+      <div class="tag" id="question-progress">Вопрос 1</div>
+      <h2 id="question-text">Текст вопроса</h2>
+      <ul class="options-list" id="options-container"></ul>
+      <button class="apple-btn" id="next-btn" onclick="nextQuestion()" disabled>Ответить</button>
+    </div>
+
+    <!-- ЭКРАН 3: РЕЗУЛЬТАТ -->
+    <div id="result-screen" class="hidden">
+      <div class="tag">Результат</div>
+      <div id="score-percentage" class="score-badge">0%</div>
+      <h1 id="result-title">Завершено</h1>
+      <p id="result-subtitle"></p>
+
+      <div id="errors-container" class="errors-summary hidden">
+        <h3>Сводка ошибок:</h3>
+        <div id="errors-list"></div>
+      </div>
+
+      <div class="btn-group" id="action-buttons"></div>
+    </div>
+
+  </div>
+
+  <script>
+    /* ==========================================================================
+       2. JS-ЗАЩИТА ОТ ЗУМА И ЖЕСТОВ В IOS SAFARI
+       ========================================================================== */
+    document.addEventListener('touchstart', function (event) {
+      if (event.touches.length > 1) {
+        event.preventDefault(); // Запрет pinch-to-zoom
+      }
+    }, { passive: false });
+
+    let lastTouchEnd = 0;
+    document.addEventListener('touchend', function (event) {
+      const now = (new Date()).getTime();
+      if (now - lastTouchEnd <= 300) {
+        event.preventDefault(); // Запрет двойного тапа
+      }
+      lastTouchEnd = now;
+    }, false);
+
+    /* ==========================================================================
+       3. ЛОГИКА ТЕСТИРОВАНИЯ И ПАРСИНГА
+       ========================================================================== */
+    let rawQuestions = [];
+    let activeQuizData = [];
+    let currentQuestionIndex = 0;
+    let score = 0;
+    let selectedOptionIndex = null;
+    let userAnswers = [];
+
+    const startBtn = document.getElementById('start-btn');
+    const startDesc = document.getElementById('start-desc');
+    const startScreen = document.getElementById('start-screen');
+    const quizScreen = document.getElementById('quiz-screen');
+    const resultScreen = document.getElementById('result-screen');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options-container');
+    const questionProgress = document.getElementById('question-progress');
+    const nextBtn = document.getElementById('next-btn');
+
+    // Автоматическая загрузка вопросов из файла при старте
+    window.addEventListener('DOMContentLoaded', () => {
+      fetch('questions.txt')
+        .then(response => {
+          if (!response.ok) throw new Error("Ошибка загрузки файла");
+          return response.text();
+        })
+        .then(text => {
+          rawQuestions = parseQuestionsFile(text);
+          if (rawQuestions.length > 0) {
+            startDesc.textContent = `В базе найдено вопросов: ${rawQuestions.length}. Нажмите «Начать» для прохождения рандомного билета.`;
+            startBtn.disabled = false;
+          } else {
+            startDesc.textContent = "Ошибка: Файл вопросов пуст или некорректен.";
+          }
+        })
+        .catch(err => {
+          startDesc.textContent = "Не удалось загрузить 'questions.txt'. Поместите файл рядом с quiz.html.";
+          console.error(err);
+        });
+    });
+
+    // Парсер файла вопросов
+    function parseQuestionsFile(text) {
+      const blocks = text.split('===').map(b => b.trim()).filter(b => b.length > 0);
+      const parsed = [];
+
+      blocks.forEach(block => {
+        const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        let question = '';
+        const options = [];
+        let correct = -1;
+
+        lines.forEach(line => {
+          if (line.startsWith('Вопрос:')) {
+            question = line.replace('Вопрос:', '').trim();
+          } else if (line.startsWith('-')) {
+            let optText = line.replace('-', '').trim();
+            if (optText.endsWith('*')) {
+              correct = options.length;
+              optText = optText.slice(0, -1).trim();
+            }
+            options.push(optText);
+          }
+        });
+
+        if (question && options.length > 0 && correct !== -1) {
+          parsed.push({ question, options, correct });
+        }
+      });
+
+      return parsed;
+    }
+
+    // Рандомизатор Fisher-Yates
+    function getRandomQuestions(array, count) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled.slice(0, count);
+    }
+
+    function startQuiz() {
+      const QUESTIONS_PER_TEST = Math.min(5, rawQuestions.length);
+      activeQuizData = getRandomQuestions(rawQuestions, QUESTIONS_PER_TEST);
+
+      currentQuestionIndex = 0;
+      score = 0;
+      userAnswers = [];
+
+      startScreen.classList.add('hidden');
+      resultScreen.classList.add('hidden');
+      quizScreen.classList.remove('hidden');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      selectedOptionIndex = null;
+      nextBtn.disabled = true;
+
+      const currentQuiz = activeQuizData[currentQuestionIndex];
+      questionProgress.textContent = `Вопрос ${currentQuestionIndex + 1} из ${activeQuizData.length}`;
+      questionText.textContent = currentQuiz.question;
+
+      optionsContainer.innerHTML = '';
+      currentQuiz.options.forEach((option, index) => {
+        const li = document.createElement('li');
+        li.className = 'option-item';
+        li.textContent = option;
+        li.onclick = () => selectOption(index, li);
+        optionsContainer.appendChild(li);
+      });
+    }
+
+    function selectOption(index, element) {
+      const allOptions = optionsContainer.querySelectorAll('.option-item');
+      allOptions.forEach(item => item.classList.remove('selected'));
+      element.classList.add('selected');
+      selectedOptionIndex = index;
+      nextBtn.disabled = false;
+    }
+
+    function nextQuestion() {
+      userAnswers.push(selectedOptionIndex);
+      if (selectedOptionIndex === activeQuizData[currentQuestionIndex].correct) {
+        score++;
+      }
+
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex < activeQuizData.length) {
+        loadQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      quizScreen.classList.add('hidden');
+      resultScreen.classList.remove('hidden');
+
+      const percentage = Math.round((score / activeQuizData.length) * 100);
+      const isPassed = percentage >= 90;
+
+      const scoreBadge = document.getElementById('score-percentage');
+      const resultTitle = document.getElementById('result-title');
+      const resultSubtitle = document.getElementById('result-subtitle');
+      const actionButtons = document.getElementById('action-buttons');
+      const errorsContainer = document.getElementById('errors-container');
+      const errorsList = document.getElementById('errors-list');
+
+      scoreBadge.textContent = `${percentage}%`;
+      scoreBadge.className = `score-badge ${isPassed ? 'success' : 'fail'}`;
+
+      if (isPassed) {
+        resultTitle.textContent = "Вы прошли аттестацию!";
+        resultSubtitle.textContent = `Отличный результат! Вы набрали ${percentage}% и подтвердили знания стандартов.`;
+      } else {
+        resultTitle.textContent = "Вы не прошли аттестацию";
+        resultSubtitle.textContent = `Ваш результат: ${percentage}%. Для успешного прохождения необходимо набрать минимум 90%.`;
+      }
+
+      // Возврат в меню доступен при любом исходе аттестации
+      actionButtons.innerHTML = `
+        <button class="apple-btn" onclick="startQuiz()">Пройти тест заново</button>
+        <button class="apple-btn apple-btn-secondary" onclick="goToMenu()">Вернуться в меню</button>
+      `;
+
+      // Формирование ошибок
+      const wrongAnswers = activeQuizData.filter((q, index) => userAnswers[index] !== q.correct);
+      if (wrongAnswers.length > 0) {
+        errorsContainer.classList.remove('hidden');
+        errorsList.innerHTML = '';
+        activeQuizData.forEach((q, index) => {
+          if (userAnswers[index] !== q.correct) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-item';
+            errorDiv.innerHTML = `
+              <div class="error-q">${q.question}</div>
+              <div class="error-user">Ваш ответ: ${q.options[userAnswers[index]] || 'Не выбран'}</div>
+              <div class="error-correct">Правильный ответ: ${q.options[q.correct]}</div>
+            `;
+            errorsList.appendChild(errorDiv);
+          }
+        });
+      } else {
+        errorsContainer.classList.add('hidden');
+      }
+    }
+
+    function goToMenu() {
+      window.location.href = "training.html";
+    }
+  </script>
+</body>
+</html>
