@@ -525,6 +525,45 @@
   @media (prefers-reduced-motion: reduce){
     .entry-body, .entry-chevron, .drawer, .drawer-overlay { transition: none; }
   }
+    /* Контейнер для кнопок в шапке */
+  .nav-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 18px;
+  }
+
+  .nav-actions .back-link {
+    margin-top: 0;
+  }
+
+  /* Кнопка «Пройти аттестацию» */
+  .attestation-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: #17120e;
+    text-decoration: none;
+    background: var(--accent-amber);
+    border: 1px solid var(--accent-amber);
+    padding: 8px 18px;
+    border-radius: 980px;
+    box-shadow: 0 4px 15px var(--accent-amber-glow);
+    transition: opacity 0.2s var(--apple-ease), transform 0.1s var(--apple-ease), background 0.2s var(--apple-ease);
+  }
+
+  .attestation-btn:hover {
+    background: #e0951d;
+    border-color: #e0951d;
+  }
+
+  .attestation-btn:active {
+    transform: scale(0.98);
+  }
 </style>
 </head>
 <body>
@@ -535,7 +574,10 @@
   <div class="kicker">@BEERFACTORYbot · обучение персонала</div>
   <h1>BEERFACTORY</h1>
   <div class="sub">история, правила и матчасть — читай по темам</div>
-  <a href="index.html" class="back-link">← Назад к ТТК</a>
+   <div class="nav-actions">
+    <a href="index.html" class="back-link">← Назад к ТТК</a>
+    <a href="attestation.html" class="attestation-btn">Пройти аттестацию →</a>
+  </div>
 </header>
 
 <div class="page">
