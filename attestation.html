@@ -354,7 +354,7 @@
     }
 
     function startQuiz() {
-      const QUESTIONS_PER_TEST = Math.min(5, rawQuestions.length);
+      const QUESTIONS_PER_TEST = Math.min(15, rawQuestions.length);
       activeQuizData = getRandomQuestions(rawQuestions, QUESTIONS_PER_TEST);
 
       currentQuestionIndex = 0;
