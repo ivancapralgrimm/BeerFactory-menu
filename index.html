@@ -989,7 +989,10 @@ function render(){
   
       portionInput.addEventListener("input", updateScaledRecipe);  
       portionInput.addEventListener("change", updateScaledRecipe);  
-      portionInput.addEventListener("click", (e) => e.stopPropagation());  
+      portionInput.addEventListener("click", (e) => e.stopPropagation());
+      portionInput.addEventListener("touchstart", (e) => e.stopPropagation());
+      portionInput.addEventListener("focus", (e) => e.stopPropagation());
+  
   
       updateScaledRecipe();  
     }  
