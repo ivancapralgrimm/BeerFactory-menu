@@ -299,7 +299,7 @@
         .then(text => {
           rawQuestions = parseQuestionsFile(text);
           if (rawQuestions.length > 0) {
-            startDesc.textContent = `В базе найдено вопросов: ${rawQuestions.length}. Нажмите «Начать» для прохождения рандомного билета.`;
+            startDesc.textContent = `В базе найдено вопросов: ${rawQuestions.length}. Нажмите «Начать» для прохождения билета из 15 вопросов.`;
             startBtn.disabled = false;
           } else {
             startDesc.textContent = "Ошибка: Файл вопросов пуст или некорректен.";
