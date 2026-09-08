@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Sudoku Craft — Winter Edition</title>
+  <style>
+    :root {
+      --bg-main: #e2ded4;            
+      --app-bg: #f5f2eb;             
+      --bg-card: rgba(255, 255, 255, 0.85);
+      --border-subtle: rgba(0, 0, 0, 0.15);
+      --accent-amber: #d97706;        
+      --accent-blue: #2563eb;         
+      --accent-red: #dc2626;          
+      --text-primary: #1c1917;
+      --text-secondary: #78716c;
+      --cell-bg: #ffffff;
+      --cell-selected: rgba(217, 119, 6, 0.25);
+      --cell-highlight: rgba(0, 0, 0, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+
+    .mobile-app {
+      width: 100%;
+      max-width: 430px;
+      height: 100vh;
+      max-height: 932px;
+      background-color: var(--app-bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
+    }
+
+    #snow-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    header {
+      width: 100%;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .header-titles {
+      text-align: left;
+    }
+
+    .kicker {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-secondary);
+    }
+
+    h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--accent-amber);
+    }
+
+    .btn-icon {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      color: var(--text-primary);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      padding: 10px 16px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      backdrop-filter: blur(8px);
+      z-index: 2;
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-value.errors {
+      color: var(--accent-red);
+    }
+
+    .board-container {
+      width: 100%;
+      aspect-ratio: 1;
+      background: #ffffff;
+      border: 2px solid var(--accent-amber);
+      border-radius: 16px;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+      z-index: 2;
+    }
+
+    .cell {
+      background: var(--cell-bg);
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+
+    /* Толстые границы для блоков 3x3 */
+    .cell:nth-child(3n) { border-right: 2px solid var(--text-primary); }
+    .cell:nth-child(9n) { border-right: none; }
+    .cell:nth-child(n+19):nth-child(-n+27),
+    .cell:nth-child(n+46):nth-child(-n+54) {
+      border-bottom: 2px solid var(--text-primary);
+    }
+
+    .cell.given { color: var(--text-primary); }
+    .cell.user { color: var(--accent-blue); }
+    
+    .cell.highlight { background: var(--cell-highlight) !important; }
+    .cell.selected { background: var(--cell-selected) !important; }
+    
+    .cell.error { 
+      color: #ffffff !important; 
+      background: var(--accent-red) !important; 
+      animation: shake 0.3s ease-in-out;
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-3px); }
+      40%, 80% { transform: translateX(3px); }
+    }
+
+    .numpad {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      z-index: 2;
+      margin-bottom: 10px;
+    }
+
+    .num-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      color: var(--text-primary);
+      font-size: 22px;
+      font-weight: 700;
+      padding: 12px 0;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+      transition: all 0.15s;
+      backdrop-filter: blur(8px);
+    }
+
+    .num-btn:active {
+      transform: scale(0.95);
+      background: var(--accent-amber);
+      color: #fff;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(245, 242, 235, 0.96);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .overlay.show {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      margin-top: 24px;
+    }
+
+    .btn-main {
+      background: var(--accent-amber);
+      color: #fff;
+      border: none;
+      padding: 16px 24px;
+      font-size: 16px;
+      font-weight: 800;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(217, 119, 6, 0.25);
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn-main:active {
+      transform: scale(0.98);
+    }
+
+    .btn-main:disabled {
+      background: #c7c2b8;
+      box-shadow: none;
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .btn-secondary {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-subtle);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    .btn-retry {
+      background: var(--accent-red);
+      box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-app" id="app-container">
+    <canvas id="snow-canvas"></canvas>
+
+    <header>
+      <div class="header-titles">
+        <div class="kicker">Winter Chill</div>
+        <h1>🧩 SUDOKU CRAFT</h1>
+      </div>
+      <button class="btn-icon" onclick="openStartMenu()">МЕНЮ</button>
+    </header>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-label">Уровень</span>
+        <span class="stat-value" id="levelDisplay">1</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Ошибки</span>
+        <span class="stat-value errors" id="errorDisplay">0 / 5</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Время</span>
+        <span class="stat-value" id="timerDisplay">00:00</span>
+      </div>
+    </div>
+
+    <div class="board-container" id="board"></div>
+
+    <div class="numpad">
+      <button class="num-btn" onclick="inputNumber(1)">1</button>
+      <button class="num-btn" onclick="inputNumber(2)">2</button>
+      <button class="num-btn" onclick="inputNumber(3)">3</button>
+      <button class="num-btn" onclick="inputNumber(4)">4</button>
+      <button class="num-btn" onclick="inputNumber(5)">5</button>
+      <button class="num-btn" onclick="inputNumber(6)">6</button>
+      <button class="num-btn" onclick="inputNumber(7)">7</button>
+      <button class="num-btn" onclick="inputNumber(8)">8</button>
+      <button class="num-btn" onclick="inputNumber(9)">9</button>
+    </div>
+
+    <!-- Модальное окно стартового меню -->
+    <div class="overlay show" id="startOverlay">
+      <h2 style="font-size: 26px; color: var(--accent-amber);">ДОБРО ПОЖАЛОВАТЬ!</h2>
+      <p style="color: var(--text-secondary); margin-top: 8px; font-size: 14px;" id="savedInfoText">
+        Выберите действие для начала игры
+      </p>
+      
+      <div class="btn-group">
+        <button class="btn-main" id="btnContinue" onclick="continueGame()">1. ПРОДОЛЖИТЬ</button>
+        <button class="btn-main btn-secondary" onclick="startNewGamePrompt()">2. НОВАЯ ИГРА</button>
+        <button class="btn-main btn-secondary" onclick="goToGamesMenu()">3. НАЗАД В МЕНЮ</button>
+      </div>
+    </div>
+
+    <!-- Модальное окно победы -->
+    <div class="overlay" id="winOverlay">
+      <h2 style="font-size: 28px; color: var(--accent-amber);">УРОВЕНЬ ПРОЙДЕН! 🎉</h2>
+      <p style="color: var(--text-secondary); margin-top: 8px;" id="winStatsText">Время: 00:00</p>
+      <div class="btn-group">
+        <button class="btn-main" onclick="nextLevel()">СЛЕДУЮЩИЙ УРОВЕНЬ</button>
+      </div>
+    </div>
+
+    <!-- Модальное окно поражения -->
+    <div class="overlay" id="loseOverlay">
+      <h2 style="font-size: 28px; color: var(--accent-red);">ПРЕВЫШЕН ЛИМИТ ОШИБОК! ❌</h2>
+      <p style="color: var(--text-secondary); margin-top: 8px;">Вы совершили 5 ошибок на этом уровне.</p>
+      <div class="btn-group">
+        <button class="btn-main btn-retry" onclick="restartCurrentLevel()">НАЧАТЬ ЗАНОВО УРОВЕНЬ</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let currentLevel = 1;
+    let errors = 0;
+    const maxErrors = 5;
+
+    let solution = [];
+    let puzzle = [];
+    let userBoard = [];
+    let selectedCell = -1;
+    let isProcessingError = false;
+
+    let timerInterval = null;
+    let secondsElapsed = 0;
+    let isGameActive = false;
+
+    // --- АНИМАЦИЯ СНЕГА ---
+    const appContainer = document.getElementById('app-container');
+    const canvas = document.getElementById('snow-canvas');
+    const ctx = canvas.getContext('2d');
+    let flakes = [];
+    let snowDriftHeight = 10;
+
+    function resizeCanvas() {
+      canvas.width = appContainer.clientWidth;
+      canvas.height = appContainer.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    for (let i = 0; i < 50; i++) {
+      flakes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        r: Math.random() * 3 + 1,
+        speed: Math.random() * 1 + 0.5,
+        drift: Math.random() * 0.5 - 0.25
+      });
+    }
+
+    function renderSnow() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(0, canvas.height);
+      ctx.quadraticCurveTo(
+        canvas.width / 2, 
+        canvas.height - (snowDriftHeight * 2), 
+        canvas.width, 
+        canvas.height
+      );
+      ctx.fill();
+
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      ctx.beginPath();
+      for (let f of flakes) {
+        ctx.moveTo(f.x, f.y);
+        ctx.arc(f.x, f.y, f.r, 0, Math.PI * 2);
+        
+        f.y += f.speed;
+        f.x += f.drift;
+
+        if (f.y > canvas.height - snowDriftHeight) {
+          f.y = -10;
+          f.x = Math.random() * canvas.width;
+        }
+      }
+      ctx.fill();
+
+      requestAnimationFrame(renderSnow);
+    }
+    renderSnow();
+
+    function getRemovedCount(level) {
+      return Math.min(25 + Math.floor((level - 1) * 2.5), 58);
+    }
+
+    // --- ТАЙМЕР И СОХРАНЕНИЕ ---
+    function startTimer() {
+      clearInterval(timerInterval);
+      updateTimerDisplay();
+      timerInterval = setInterval(() => {
+        secondsElapsed++;
+        updateTimerDisplay();
+        
+        if (snowDriftHeight < 50) {
+          snowDriftHeight += 0.02;
+        }
+        
+        if (secondsElapsed % 5 === 0) {
+          saveGameState();
+        }
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      clearInterval(timerInterval);
+    }
+
+    function updateTimerDisplay() {
+      const m = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+      const s = String(secondsElapsed % 60).padStart(2, '0');
+      document.getElementById('timerDisplay').innerText = `${m}:${s}`;
+    }
+
+    function saveGameState() {
+      if (!isGameActive) return;
+      const state = {
+        level: currentLevel,
+        errors: errors,
+        seconds: secondsElapsed,
+        solution: solution,
+        puzzle: puzzle,
+        userBoard: userBoard
+      };
+      localStorage.setItem('sudoku_save_state', JSON.stringify(state));
+    }
+
+    function loadGameState() {
+      const data = localStorage.getItem('sudoku_save_state');
+      if (!data) return false;
+      try {
+        const state = JSON.parse(data);
+        currentLevel = state.level;
+        errors = state.errors;
+        secondsElapsed = state.seconds;
+        solution = state.solution;
+        puzzle = state.puzzle;
+        userBoard = state.userBoard;
+        return true;
+      } catch(e) {
+        return false;
+      }
+    }
+
+    function clearSaveState() {
+      localStorage.removeItem('sudoku_save_state');
+    }
+
+    // --- НАВИГАЦИЯ И МЕНЮ ---
+    function checkSavedGame() {
+      const data = localStorage.getItem('sudoku_save_state');
+      const btnContinue = document.getElementById('btnContinue');
+      const infoText = document.getElementById('savedInfoText');
+
+      if (data) {
+        try {
+          const state = JSON.parse(data);
+          btnContinue.disabled = false;
+          infoText.innerText = `Найдено сохранение: Уровень ${state.level}`;
+        } catch(e) {
+          btnContinue.disabled = true;
+          infoText.innerText = `Сохраненных игр не найдено`;
+        }
+      } else {
+        btnContinue.disabled = true;
+        infoText.innerText = `Сохраненных игр не найдено`;
+      }
+    }
+
+    function openStartMenu() {
+      pauseTimer();
+      checkSavedGame();
+      document.getElementById('startOverlay').classList.add('show');
+    }
+
+    function continueGame() {
+      if (loadGameState()) {
+        isGameActive = true;
+        updateErrorsDisplay();
+        document.getElementById('levelDisplay').innerText = currentLevel;
+        renderBoard();
+        document.getElementById('startOverlay').classList.remove('show');
+        startTimer();
+      }
+    }
+
+    function startNewGamePrompt() {
+      currentLevel = parseInt(localStorage.getItem('sudoku_level')) || 1;
+      clearSaveState();
+      document.getElementById('startOverlay').classList.remove('show');
+      generateSudoku();
+    }
+
+    function goToGamesMenu() {
+      if (isGameActive) {
+        saveGameState();
+      }
+      window.location.href = 'training.html';
+    }
+
+    // --- ГЕНЕРАЦИЯ И ЛОГИКА ---
+    function generateSudoku() {
+      errors = 0;
+      isProcessingError = false;
+      secondsElapsed = 0;
+      snowDriftHeight = 10;
+      updateErrorsDisplay();
+      document.getElementById('levelDisplay').innerText = currentLevel;
+
+      solution = Array(81).fill(0);
+      fillGrid(solution);
+
+      puzzle = [...solution];
+      let removed = 0;
+      const target = getRemovedCount(currentLevel);
+
+      while (removed < target) {
+        let idx = Math.floor(Math.random() * 81);
+        if (puzzle[idx] !== 0) {
+          puzzle[idx] = 0;
+          removed++;
+        }
+      }
+
+      userBoard = [...puzzle];
+      isGameActive = true;
+      saveGameState();
+      renderBoard();
+      startTimer();
+    }
+
+    function fillGrid(grid) {
+      for (let i = 0; i < 81; i++) {
+        if (grid[i] === 0) {
+          let nums = shuffle([1,2,3,4,5,6,7,8,9]);
+          for (let num of nums) {
+            if (isValid(grid, i, num)) {
+              grid[i] = num;
+              if (fillGrid(grid)) return true;
+              grid[i] = 0;
+            }
+          }
+          return false;
+        }
+      }
+      return true;
+    }
+
+    function isValid(grid, idx, num) {
+      let row = Math.floor(idx / 9);
+      let col = idx % 9;
+      let boxRow = Math.floor(row / 3) * 3;
+      let boxCol = Math.floor(col / 3) * 3;
+
+      for (let i = 0; i < 9; i++) {
+        if (grid[row * 9 + i] === num) return false;
+        if (grid[i * 9 + col] === num) return false;
+        let r = boxRow + Math.floor(i / 3);
+        let c = boxCol + (i % 3);
+        if (grid[r * 9 + c] === num) return false;
+      }
+      return true;
+    }
+
+    function shuffle(arr) {
+      return arr.sort(() => Math.random() - 0.5);
+    }
+
+    function renderBoard() {
+      const boardEl = document.getElementById('board');
+      boardEl.innerHTML = '';
+
+      for (let i = 0; i < 81; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+
+        if (puzzle[i] !== 0) {
+          cell.innerText = puzzle[i];
+          cell.classList.add('given');
+        } else if (userBoard[i] !== 0) {
+          cell.innerText = userBoard[i];
+          cell.classList.add('user');
+        }
+
+        cell.onclick = () => selectCell(i);
+        boardEl.appendChild(cell);
+      }
+    }
+
+    function selectCell(idx) {
+      if (isProcessingError || !isGameActive) return;
+      selectedCell = idx;
+      const cells = document.querySelectorAll('.cell');
+      const selRow = Math.floor(idx / 9);
+      const selCol = idx % 9;
+
+      cells.forEach((cell, i) => {
+        cell.classList.remove('selected', 'highlight');
+        const r = Math.floor(i / 9);
+        const c = i % 9;
+
+        if (i === idx) {
+          cell.classList.add('selected');
+        } else if (r === selRow || c === selCol) {
+          cell.classList.add('highlight');
+        }
+      });
+    }
+
+    function inputNumber(num) {
+      if (selectedCell === -1 || puzzle[selectedCell] !== 0 || errors >= maxErrors || isProcessingError || !isGameActive) return;
+
+      const targetCellIndex = selectedCell;
+
+      if (num !== solution[targetCellIndex]) {
+        errors++;
+        updateErrorsDisplay();
+        saveGameState();
+
+        isProcessingError = true;
+        userBoard[targetCellIndex] = num;
+        renderBoard();
+        selectCell(targetCellIndex);
+
+        const cells = document.querySelectorAll('.cell');
+        cells[targetCellIndex].classList.add('error');
+
+        if (errors >= maxErrors) {
+          pauseTimer();
+          isGameActive = false;
+          clearSaveState();
+          setTimeout(() => {
+            document.getElementById('loseOverlay').classList.add('show');
+          }, 500);
+          return;
+        }
+
+        setTimeout(() => {
+          userBoard[targetCellIndex] = 0;
+          isProcessingError = false;
+          renderBoard();
+          selectCell(targetCellIndex);
+        }, 1000);
+
+        return;
+      }
+
+      userBoard[targetCellIndex] = num;
+      saveGameState();
+      renderBoard();
+      selectCell(targetCellIndex);
+
+      checkWin();
+    }
+
+    function updateErrorsDisplay() {
+      document.getElementById('errorDisplay').innerText = `${errors} / ${maxErrors}`;
+    }
+
+    function checkWin() {
+      if (userBoard.every((val, idx) => val === solution[idx])) {
+        pauseTimer();
+        isGameActive = false;
+        clearSaveState();
+        const timeStr = document.getElementById('timerDisplay').innerText;
+        document.getElementById('winStatsText').innerText = `Уровень ${currentLevel} пройден за ${timeStr}`;
+        document.getElementById('winOverlay').classList.add('show');
+      }
+    }
+
+    function nextLevel() {
+      currentLevel++;
+      localStorage.setItem('sudoku_level', currentLevel);
+      document.getElementById('winOverlay').classList.remove('show');
+      selectedCell = -1;
+      generateSudoku();
+    }
+
+    function restartCurrentLevel() {
+      document.getElementById('loseOverlay').classList.remove('show');
+      selectedCell = -1;
+      generateSudoku();
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key >= '1' && e.key <= '9') inputNumber(parseInt(e.key));
+    });
+
+    openStartMenu();
+  </script>
+</body>
+</html>
