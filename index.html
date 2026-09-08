@@ -72,6 +72,51 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
   }  
+    /* Контейнер Flexbox для выравнивания персонажа и текста */
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    max-width: 480px;
+    margin: 0 auto;
+  }
+
+  /* Обертка для фото пивовара */
+  .header-brewer {
+    flex-shrink: 0;
+    width: 105px;
+    height: 120px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    position: relative;
+  }
+
+  /* Картинка персонажа с эффектом тени */
+  .brewer-img {
+    width: auto;
+    height: 130px;
+    object-fit: contain;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+  }
+
+  /* Текстовый блок шапки */
+  .header-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .header-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+  
   .kicker {  
     font-size: 12px;  
     font-weight: 600;
@@ -659,12 +704,22 @@
 <body>  
 <button class="to-top" id="toTop" aria-label="Наверх">↑</button>  
 <header>  
-  <div class="kicker">@BEERFACTORYbot · справочник</div>  
-  <h1>BEERFACTORY</h1>  
-    <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-    <a href="training.html" class="training-link">📚 Обучение для персонала</a>  
-    <a href="attestation.html" class="training-link">📝 Аттестация</a>  
-  </div>  
+  <div class="header-content">
+    <!-- Блок 1: Изображение персонажа (слева) -->
+    <div class="header-brewer">
+      <img src="brewer.png" alt="Пивовар BeerFactory" class="brewer-img">
+    </div>
+    
+    <!-- Блок 2: Текст и ссылки (справа) -->
+    <div class="header-text">
+      <div class="kicker">@BEERFACTORYbot · справочник</div>  
+      <h1>BEERFACTORY</h1>  
+      <div class="header-links">
+        <a href="training.html" class="training-link">📚 Обучение</a>  
+        <a href="attestation.html" class="training-link">📝 Аттестация</a>  
+      </div>  
+    </div>
+  </div>
 </header>  
   
 <div class="controls">  
