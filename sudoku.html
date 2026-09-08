@@ -160,7 +160,6 @@
       transition: background 0.12s, color 0.12s;
     }
 
-    /* Толстые границы для блоков 3x3 */
     .cell:nth-child(3n) { border-right: 2px solid var(--text-primary); }
     .cell:nth-child(9n) { border-right: none; }
     .cell:nth-child(n+19):nth-child(-n+27),
@@ -326,7 +325,6 @@
       <button class="num-btn" onclick="inputNumber(9)">9</button>
     </div>
 
-    <!-- Модальное окно стартового меню -->
     <div class="overlay show" id="startOverlay">
       <h2 style="font-size: 26px; color: var(--accent-amber);">ДОБРО ПОЖАЛОВАТЬ!</h2>
       <p style="color: var(--text-secondary); margin-top: 8px; font-size: 14px;" id="savedInfoText">
@@ -340,7 +338,6 @@
       </div>
     </div>
 
-    <!-- Модальное окно победы -->
     <div class="overlay" id="winOverlay">
       <h2 style="font-size: 28px; color: var(--accent-amber);">УРОВЕНЬ ПРОЙДЕН! 🎉</h2>
       <p style="color: var(--text-secondary); margin-top: 8px;" id="winStatsText">Время: 00:00</p>
@@ -349,7 +346,6 @@
       </div>
     </div>
 
-    <!-- Модальное окно поражения -->
     <div class="overlay" id="loseOverlay">
       <h2 style="font-size: 28px; color: var(--accent-red);">ПРЕВЫШЕН ЛИМИТ ОШИБОК! ❌</h2>
       <p style="color: var(--text-secondary); margin-top: 8px;">Вы совершили 5 ошибок на этом уровне.</p>
@@ -382,16 +378,18 @@
     let snowDriftHeight = 10;
 
     function resizeCanvas() {
-      canvas.width = appContainer.clientWidth;
-      canvas.height = appContainer.clientHeight;
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = appContainer.clientWidth * dpr;
+      canvas.height = appContainer.clientHeight * dpr;
+      ctx.scale(dpr, dpr);
     }
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
     for (let i = 0; i < 50; i++) {
       flakes.push({
-        x: Math.random() * canvas.width,
-        y: Math.random() * canvas.height,
+        x: Math.random() * appContainer.clientWidth,
+        y: Math.random() * appContainer.clientHeight,
         r: Math.random() * 3 + 1,
         speed: Math.random() * 1 + 0.5,
         drift: Math.random() * 0.5 - 0.25
@@ -399,16 +397,19 @@
     }
 
     function renderSnow() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const width = appContainer.clientWidth;
+      const height = appContainer.clientHeight;
+
+      ctx.clearRect(0, 0, width, height);
 
       ctx.fillStyle = '#ffffff';
       ctx.beginPath();
-      ctx.moveTo(0, canvas.height);
+      ctx.moveTo(0, height);
       ctx.quadraticCurveTo(
-        canvas.width / 2, 
-        canvas.height - (snowDriftHeight * 2), 
-        canvas.width, 
-        canvas.height
+        width / 2, 
+        height - (snowDriftHeight * 2), 
+        width, 
+        height
       );
       ctx.fill();
 
@@ -421,9 +422,9 @@
         f.y += f.speed;
         f.x += f.drift;
 
-        if (f.y > canvas.height - snowDriftHeight) {
+        if (f.y > height - snowDriftHeight) {
           f.y = -10;
-          f.x = Math.random() * canvas.width;
+          f.x = Math.random() * width;
         }
       }
       ctx.fill();
@@ -482,6 +483,8 @@
       if (!data) return false;
       try {
         const state = JSON.parse(data);
+        if (!state.solution || !state.puzzle || !state.userBoard) return false;
+        
         currentLevel = state.level;
         errors = state.errors;
         secondsElapsed = state.seconds;
@@ -507,16 +510,16 @@
       if (data) {
         try {
           const state = JSON.parse(data);
-          btnContinue.disabled = false;
-          infoText.innerText = `Найдено сохранение: Уровень ${state.level}`;
-        } catch(e) {
-          btnContinue.disabled = true;
-          infoText.innerText = `Сохраненных игр не найдено`;
-        }
-      } else {
-        btnContinue.disabled = true;
-        infoText.innerText = `Сохраненных игр не найдено`;
+          if (state && state.level) {
+            btnContinue.disabled = false;
+            infoText.innerText = `Найдено сохранение: Уровень ${state.level}`;
+            return;
+          }
+        } catch(e) {}
       }
+      
+      btnContinue.disabled = true;
+      infoText.innerText = `Сохраненных игр не найдено`;
     }
 
     function openStartMenu() {
@@ -584,7 +587,7 @@
     function fillGrid(grid) {
       for (let i = 0; i < 81; i++) {
         if (grid[i] === 0) {
-          let nums = shuffle([1,2,3,4,5,6,7,8,9]);
+          let nums = shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9]);
           for (let num of nums) {
             if (isValid(grid, i, num)) {
               grid[i] = num;
@@ -615,7 +618,12 @@
     }
 
     function shuffle(arr) {
-      return arr.sort(() => Math.random() - 0.5);
+      let array = [...arr];
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
     }
 
     function renderBoard() {
@@ -742,3 +750,4 @@
   </script>
 </body>
 </html>
+
