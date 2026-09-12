@@ -330,11 +330,10 @@
     .grid { grid-template-columns: 1fr 1fr; }  
   }  
 
-  .card {  
-    perspective: 1200px;  
-    height: 200px;  
-    transition: height 0.4s var(--apple-ease);  
-  }  
+  .card {
+  perspective: 1200px;
+  -webkit-perspective: 1200px;
+}  
   .card.flipped {  
     height: var(--flip-h, 340px);  
   }  
@@ -373,11 +372,12 @@
     cursor: pointer;  
     transition: border-color 0.2s var(--apple-ease), transform 0.2s var(--apple-ease), box-shadow 0.2s var(--apple-ease);
   }  
-  .front:hover { 
-    border-color: var(--accent-amber); 
-    transform: translateY(-3px);
-    box-shadow: 0 24px 44px rgba(0, 0, 0, 0.55);
-  }  
+  @media (hover: hover) and (pointer: fine) {
+  .front:hover {
+    border-color: var(--accent-amber);
+    box-shadow: 0 24px 44px rgba(0,0,0,.55);
+  }
+}  
   .front:active {
     transform: translateY(-1px) scale(0.99);
   }
