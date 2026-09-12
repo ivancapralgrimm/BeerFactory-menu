@@ -331,12 +331,16 @@
   }  
 
   .card {
+  position: relative;
+  height: 200px;
   perspective: 1200px;
   -webkit-perspective: 1200px;
+  transition: height 0.4s var(--apple-ease);
+}
+
+.card.flipped {
+  height: var(--flip-h, 340px);
 }  
-  .card.flipped {  
-    height: var(--flip-h, 340px);  
-  }  
   .card-inner {
   position: relative;
   width: 100%;
@@ -344,26 +348,24 @@
   transition: transform 0.6s var(--apple-ease);
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
-}  
-  .card.flipped .card-inner {
+}
+
+.card.flipped .card-inner {
   transform: rotateY(180deg);
   -webkit-transform: rotateY(180deg);
-}  
+}
 
-  .face {
+.face {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  border-radius: 20px;
-  padding: 20px;
-  overflow: hidden;
-  background: var(--bg-card);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-subtle);
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
-}  
+}
+
+.back {
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+}
 
   .front {  
     display: flex;  
