@@ -49,10 +49,11 @@
       background-color: var(--bg-main);
       color: var(--text-primary);
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 16px;
+      padding: calc(16px + env(safe-area-inset-top)) 16px calc(16px + env(safe-area-inset-bottom));
     }
 
     /* Мобильный контейнер */
@@ -203,6 +204,12 @@
       transform: none;
     }
 
+    .apple-btn:focus-visible,
+    .option-item:focus-visible {
+      outline: 2px solid var(--accent-amber);
+      outline-offset: 3px;
+    }
+
     .apple-btn-secondary {
       background: rgba(255, 255, 255, 0.08);
       color: var(--text-primary);
@@ -278,6 +285,7 @@
     let score = 0;
     let selectedOptionIndex = null;
     let userAnswers = [];
+    let isAdvancing = false;
 
     const startBtn = document.getElementById('start-btn');
     const startDesc = document.getElementById('start-desc');
@@ -306,7 +314,7 @@
           }
         })
         .catch(err => {
-          startDesc.textContent = "Не удалось загрузить 'questions.txt'. Поместите файл рядом с quiz.html.";
+          startDesc.textContent = "Не удалось загрузить 'questions.txt'. Поместите файл рядом с attestation.html.";
           console.error(err);
         });
     });
@@ -360,6 +368,7 @@
       currentQuestionIndex = 0;
       score = 0;
       userAnswers = [];
+      isAdvancing = false;
 
       startScreen.classList.add('hidden');
       resultScreen.classList.add('hidden');
@@ -380,20 +389,36 @@
         const li = document.createElement('li');
         li.className = 'option-item';
         li.textContent = option;
+        li.tabIndex = 0;
+        li.setAttribute('role', 'radio');
+        li.setAttribute('aria-checked', 'false');
         li.onclick = () => selectOption(index, li);
+        li.onkeydown = (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            selectOption(index, li);
+          }
+        };
         optionsContainer.appendChild(li);
       });
     }
 
     function selectOption(index, element) {
       const allOptions = optionsContainer.querySelectorAll('.option-item');
-      allOptions.forEach(item => item.classList.remove('selected'));
+      allOptions.forEach(item => {
+        item.classList.remove('selected');
+        item.setAttribute('aria-checked', 'false');
+      });
       element.classList.add('selected');
+      element.setAttribute('aria-checked', 'true');
       selectedOptionIndex = index;
       nextBtn.disabled = false;
     }
 
     function nextQuestion() {
+      if (isAdvancing || selectedOptionIndex === null) return;
+      isAdvancing = true;
+      nextBtn.disabled = true;
       userAnswers.push(selectedOptionIndex);
       if (selectedOptionIndex === activeQuizData[currentQuestionIndex].correct) {
         score++;
@@ -406,6 +431,7 @@
       } else {
         showResults();
       }
+      requestAnimationFrame(() => { isAdvancing = false; });
     }
 
     function showResults() {

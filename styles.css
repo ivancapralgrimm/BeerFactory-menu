@@ -33,7 +33,7 @@
       radial-gradient(circle at 80% 100%, rgba(245, 166, 35, 0.08), transparent 50%);
     color: var(--text-primary);  
     font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
-    padding: 0 0 60px;  
+    padding: 0 0 calc(60px + env(safe-area-inset-bottom));
     min-height: 100%;  
     overflow-y: auto;  
     overflow-x: hidden;  
@@ -42,7 +42,7 @@
 
   /* Header */
   header {  
-    padding: 50px 20px 24px;  
+    padding: calc(50px + env(safe-area-inset-top)) 20px 24px;
     text-align: center;  
     border-bottom: 1px solid var(--border-subtle);  
     background: rgba(23, 18, 14, 0.6);
@@ -232,7 +232,7 @@
     display: flex; 
     align-items: center; 
     justify-content: space-between;  
-    padding: 24px 20px 16px;  
+    padding: calc(24px + env(safe-area-inset-top)) 20px 16px;
     border-bottom: 1px solid var(--border-subtle);  
   }  
   .drawer-head .dh-title {  
@@ -576,7 +576,7 @@
   .to-top {  
     position: fixed;  
     right: 20px;  
-    bottom: 24px;  
+    bottom: calc(24px + env(safe-area-inset-bottom));
     width: 48px;  
     height: 48px;  
     border-radius: 980px;  
@@ -655,3 +655,10 @@
   }  
   .lightbox-close:hover { background: rgba(255, 255, 255, 0.2); }  
   .lightbox-close:active { transform: scale(0.95); }
+
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible {
+    outline: 2px solid var(--accent-amber);
+    outline-offset: 3px;
+  }

@@ -36,6 +36,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      min-height: 100dvh;
       margin: 0;
       overflow: hidden;
     }
@@ -44,13 +45,14 @@
       width: 100%;
       max-width: 430px;
       height: 100vh;
+      height: 100dvh;
       max-height: 932px;
       background-color: var(--app-bg);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
       align-items: center;
-      padding: 20px 16px;
+      padding: calc(20px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
       position: relative;
       overflow: hidden;
       box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
@@ -270,6 +272,12 @@
       opacity: 0.6;
     }
 
+    button:focus-visible,
+    .cell:focus-visible {
+      outline: 2px solid var(--accent-blue);
+      outline-offset: 2px;
+    }
+
     .btn-secondary {
       background: var(--bg-card);
       color: var(--text-primary);
@@ -369,6 +377,18 @@
     let timerInterval = null;
     let secondsElapsed = 0;
     let isGameActive = false;
+
+    function storageGet(key) {
+      try { return localStorage.getItem(key); } catch(e) { return null; }
+    }
+
+    function storageSet(key, value) {
+      try { localStorage.setItem(key, value); return true; } catch(e) { return false; }
+    }
+
+    function storageRemove(key) {
+      try { localStorage.removeItem(key); } catch(e) {}
+    }
 
     // --- АНИМАЦИЯ СНЕГА ---
     const appContainer = document.getElementById('app-container');
@@ -475,19 +495,23 @@
         puzzle: puzzle,
         userBoard: userBoard
       };
-      localStorage.setItem('sudoku_save_state', JSON.stringify(state));
+      storageSet('sudoku_save_state', JSON.stringify(state));
     }
 
     function loadGameState() {
-      const data = localStorage.getItem('sudoku_save_state');
+      const data = storageGet('sudoku_save_state');
       if (!data) return false;
       try {
         const state = JSON.parse(data);
-        if (!state.solution || !state.puzzle || !state.userBoard) return false;
+        const validBoard = board => Array.isArray(board)
+          && board.length === 81
+          && board.every(value => Number.isInteger(value) && value >= 0 && value <= 9);
+        if (!validBoard(state.solution) || !validBoard(state.puzzle) || !validBoard(state.userBoard)) return false;
+        if (!Number.isInteger(state.level) || state.level < 1) return false;
         
         currentLevel = state.level;
-        errors = state.errors;
-        secondsElapsed = state.seconds;
+        errors = Number.isInteger(state.errors) ? Math.max(0, Math.min(state.errors, maxErrors - 1)) : 0;
+        secondsElapsed = Number.isInteger(state.seconds) ? Math.max(0, state.seconds) : 0;
         solution = state.solution;
         puzzle = state.puzzle;
         userBoard = state.userBoard;
@@ -498,12 +522,12 @@
     }
 
     function clearSaveState() {
-      localStorage.removeItem('sudoku_save_state');
+      storageRemove('sudoku_save_state');
     }
 
     // --- НАВИГАЦИЯ И МЕНЮ ---
     function checkSavedGame() {
-      const data = localStorage.getItem('sudoku_save_state');
+      const data = storageGet('sudoku_save_state');
       const btnContinue = document.getElementById('btnContinue');
       const infoText = document.getElementById('savedInfoText');
 
@@ -540,7 +564,7 @@
     }
 
     function startNewGamePrompt() {
-      currentLevel = parseInt(localStorage.getItem('sudoku_level')) || 1;
+      currentLevel = parseInt(storageGet('sudoku_level')) || 1;
       clearSaveState();
       document.getElementById('startOverlay').classList.remove('show');
       generateSudoku();
@@ -730,7 +754,7 @@
 
     function nextLevel() {
       currentLevel++;
-      localStorage.setItem('sudoku_level', currentLevel);
+      storageSet('sudoku_level', currentLevel);
       document.getElementById('winOverlay').classList.remove('show');
       selectedCell = -1;
       generateSudoku();
@@ -746,8 +770,17 @@
       if (e.key >= '1' && e.key <= '9') inputNumber(parseInt(e.key));
     });
 
+    window.addEventListener('pagehide', saveGameState);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        saveGameState();
+        pauseTimer();
+      } else if (isGameActive && !document.querySelector('.overlay.show')) {
+        startTimer();
+      }
+    });
+
     openStartMenu();
   </script>
 </body>
 </html>
-

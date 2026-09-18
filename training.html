@@ -772,7 +772,16 @@ function readingTime(text){
   return Math.max(1, Math.round(words / 180));
 }
 function escapeHtml(s){
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function storageGet(key){
+  try { return localStorage.getItem(key); } catch(e) { return null; }
+}
+function storageSet(key, value){
+  try { localStorage.setItem(key, value); return true; } catch(e) { return false; }
+}
+function storageRemove(key){
+  try { localStorage.removeItem(key); } catch(e) {}
 }
 // Мини-разметка внутри training-data.txt (применяется ПОСЛЕ escapeHtml — безопасно):
 //   **жирный**   → <strong>
@@ -930,7 +939,7 @@ function render(){
       const noteArea = entry.querySelector('.note-area');
       const noteSaved = entry.querySelector('.note-saved');
       const key = noteKey(item);
-      const existing = localStorage.getItem(key);
+      const existing = storageGet(key);
       if(existing){ noteArea.value = existing; noteSaved.textContent = 'заметка сохранена'; }
 
       noteBtn.addEventListener('click', () => {
@@ -942,10 +951,10 @@ function render(){
         clearTimeout(saveTimer);
         saveTimer = setTimeout(() => {
           if(noteArea.value.trim()){
-            localStorage.setItem(key, noteArea.value);
-            noteSaved.textContent = 'сохранено ✓';
+            const saved = storageSet(key, noteArea.value);
+            noteSaved.textContent = saved ? 'сохранено ✓' : 'не удалось сохранить';
           } else {
-            localStorage.removeItem(key);
+            storageRemove(key);
             noteSaved.textContent = '';
           }
         }, 500);
@@ -1007,4 +1016,3 @@ loadTrainingData().then(items => {
 
 </body>
 </html>
-
